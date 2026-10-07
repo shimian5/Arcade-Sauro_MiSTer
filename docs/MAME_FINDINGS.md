@@ -12,10 +12,12 @@ Everything here is MAME-model evidence plus firmware inference, **not** PCB meas
   machine time; gameplay/attract IRQs only start after IFF1 is set at about frame 90.
 - Per frame ISR (entry ~`0053`): `OUT C9=01` (latch Q4 high), writes `A0`, `A1`
   (bg/fg scroll), `C0` (flip latch bit), then `OUT C8=00` (Q4 low) at `009F`.
-- **IRQ model:** MAME's LS259 clears on reset, so Q4=0 and the IRQ is enabled from
-  reset. VBLANK start asserts INT (level); Q4=1 clears and masks it; Q4=0 re-enables.
-  Firmware pulses Q4 high then low in every ISR, consistent with a flip-flop that is
-  cleared by Q4 and set by vblank. Exact flip-flop polarity: provisional.
+- **IRQ model (corrected 2026-10-07):** MAME's LS259 clears on reset, so Q4=0 and the
+  interrupt is enabled from reset. VBLANK start sets a level-held INT only while Q4=0.
+  A latch write that leaves Q4 low (enabled) **clears** the pending INT; Q4=1 only masks
+  new interrupts. The firmware ISR therefore does `OUT C9=01` (mask) ... `OUT C8=00`
+  (unmask and clear) at its end. An earlier draft of this file had the clear on Q4 high.
+  Exact flip-flop polarity remains provisional (no schematic).
 - Seawolft main boot trace identical in structure to sauro.
 
 ## F2. Tricky Doc
@@ -40,3 +42,13 @@ Everything here is MAME-model evidence plus firmware inference, **not** PCB meas
 - Pixel clock, H/V totals, sync widths, vblank position. MAME's 256x256 geometry is
   a placeholder; 55.72 Hz is the only PCB-verified figure.
 - Watchdog timeout, sprite engine timing, Q3 of the Sauro latch, `user1` PROM role.
+
+## F6. Milestone 3 result (main-CPU subsystem, Verilator, original ROMs)
+`rtl/tecfri_main.sv` + `rtl/tecfri_timing.sv` (provisional 320x280) execute the unmodified
+`sauro`, `seawolft` and `trckydoc` program ROMs through the self-test to the first ISRs.
+`tools/compare_trace.py` finds the first 40 write events (I/O `80-FF` or program `F820-F83F`,
+watchdog values excluded) identical to the MAME trace for all three sets. This shows
+bus decode, latch, IRQ and input defaults agree with MAME for that window only. It says
+nothing about video, sound, wait states or pixel timing. First ISR in RTL occurs at
+1.6324 s machine time (MAME 1.6324 s); with different frame periods the near-equality
+is not independent evidence of timing.
