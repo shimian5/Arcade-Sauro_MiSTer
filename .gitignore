@@ -43,3 +43,5 @@ docs/reference/mame/
 simulation/
 build.log
 build_console.log
+__pycache__/
+*.pyc
