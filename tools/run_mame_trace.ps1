@@ -3,7 +3,7 @@
 param(
 	[Parameter(Mandatory)][ValidateSet('sauro','trckydoc','seawolft')][string]$Set,
 	[int]$Seconds = 8,
-	[string]$RomPath = '\fairlanenas\data\Games\ROMS\MAME\MAME 0.257 ROMs (split)'
+	[string]$RomPath = '\\fairlanenas\data\Games\ROMS\MAME\MAME 0.257 ROMs (split)'
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot

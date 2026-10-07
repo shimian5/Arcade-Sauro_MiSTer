@@ -20,6 +20,16 @@ if not m.system.name:find("trckydoc") then   -- trckydoc is memory mapped; other
 else
 	tapw("M", main, "program", 0xf820, 0xf83f, "mio")  -- YM3812, scroll, latch
 end
+
+-- Input port reads (first 4 per address) so DIP/input defaults can be taken from MAME.
+local rd_count = {}
+local function tapr(cpu, dev, space, s, e, name)
+	tecfri_taps[#tecfri_taps+1] = dev.spaces[space]:install_read_tap(s, e, name, function(off, data, mask)
+		rd_count[off] = (rd_count[off] or 0) + 1
+		if rd_count[off] <= 4 then log(cpu, "%s r %04x -> %02x", space, off, data & 0xff) end
+	end)
+end
+if not m.system.name:find("trckydoc") then tapr("M", main, "io", 0x00, 0x7f, "mior") else tapr("M", main, "program", 0xf800, 0xf81f, "mior") end
 if audio then
 	tapw("A", audio, "program", 0xa000, 0xa000, "aspeech")
 	tapw("A", audio, "program", 0xc000, 0xc001, "aym")

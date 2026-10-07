@@ -1,17 +1,23 @@
-# Board photo: Tecfri 60922/1
+# Board photos
 
-`tecfri-60922-1-board.webp` was supplied by the project owner (original source
-not recorded; the owner also pointed to https://jammarcade.net/tricky-doc-repair-log/
-as a small source of board information). Which game's board this is has not been
-established: one Z80 (Zilog Z0840006PSC, date code 8709) is visible and the EPROM
-labels are Tecfri-stamped.
+## tricky-doc-60922-1-board.webp (saved)
+Tecfri 60922/1, **Tricky Doc** (identified by the project owner). Supplied by the
+owner; original source not recorded. The owner also pointed to
+https://jammarcade.net/tricky-doc-repair-log/ (no raster information).
+- One Z80 (Zilog Z0840006PSC, date code 8709), one crystal marked 20.000 MHz.
+- Discrete video timing: several 74LS163, 74LS393, 74LS107, 74LS74, 74LS169; no custom video chip.
+- PAL16R6A, PAL16R4A (several) and PAL16L8A (fuse maps not dumped).
+- TMM2016BP-10 work RAM, battery holder, two 8-position DIP banks, 3 PROM-sized sockets.
 
-Observations (read from the photo, unverified chip-level detail):
-- One crystal, marked 20.000 MHz. No second crystal is visible. The 8 MHz crystal
-  listed in MAME for the Sauro *bootleg* is therefore not evidence for the original.
-- Video timing is built from discrete counters: several 74LS163 (4-bit sync
-  counters), 74LS393, 74LS107/74LS74 dividers, 74LS169 up/down counters, with
-  74LS157 muxes and 74LS273/373 latches. There is no custom video chip.
-- PAL16R6A, several PAL16R4A and a PAL16L8A are present (decode/state logic). Their
-  fuse maps are not dumped, so decode and timing derived from them stay unknown.
-- Work RAM TMM2016BP-10 (2 KB), a battery holder (NVRAM), two 8-position DIP banks.
+## Sauro board (NOT yet saved as a file)
+The owner posted a photo of the **Sauro** board (dual Z80, two crystals) in chat. The
+image exists only inline in the conversation, so no file could be written; the owner
+needs to place it here (e.g. `sauro-board.jpg`). Read from the inline image:
+- Two Z80s: Z8400B PS "Z80B" (date 8651, main) and Z8400A PS "Z80A" (date 8643, audio).
+- Two crystals: one marked 20.000 MHz (centre); a second small crystal at the lower
+  left near the audio section whose marking is **not legible** in the downscaled image.
+- GI SP0256-AL2 (Taiwan) in a socket, 74LS393/163/169/174/273/157 etc., PAL16L8A, PAL16R4A,
+  PAL16R6A, Toshiba TC5516APL and MCM2016 RAMs, Am2149-35 1Kx4 SRAMs (probably video RAM),
+  a black enclosure/heat-sink over the audio amplifier, two DIP banks, battery position.
+- The second crystal is the main open item: its frequency and which circuit it clocks
+  (speech, YM3812, or video) are unknown until the marking is read.
