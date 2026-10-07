@@ -16,6 +16,14 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   sauro, seawolft, trckydoc frames at interrupt 5, 10, 20 match MAME frames 4, 9, 19 pixel for pixel;
   sauro pause test (0 bus writes, 0 interrupt acknowledges, 269,232 pixel clocks over 3 frames, resumed).
   Video block vs 42 MAME frame dumps: 0 differing pixels.
-- Hardware (physical, owner): runs over HDMI at about 55.7 Hz, all three games (`_Sauro`, `_Sea Wolf (Tecfri)`,
-  `_Tricky Doc` MRAs) start and play; "a couple of small glitches", not yet described. No sound in this build.
-  Not yet checked on hardware: VGA/15 kHz RGB output, scandoubler/effects, pause button on hardware.
+- Hardware (physical, owner, 2026-10-07), HDMI at 1920x1080, DIRECT_VIDEO=2, 8BitDo controller:
+  all three games (`_Sauro`, `_Sea Wolf (Tecfri)`, `_Tricky Doc` MRAs) load and play; no loss of sync.
+  The owner reported a few visual oddities, then confirmed each also appears in MAME and treats them as normal:
+  junk at the left edge of Sauro, a span of missing pixels along the Sauro horizon, and the unusual top/bottom
+  spacing of the Tricky Doc game-over screen. No defect has been identified in this build. Colours looked correct
+  on the Sauro sky and Tricky Doc screens photographed.
+- The MiSTer log shows the ROM download arrived as laid out (0x59400 bytes for index 0, 1 byte for index 1) and
+  reports the core's output as 240x224, 15.8 kHz, 55.7 Hz, 5.00 MHz pixel, 80.00 MHz video clock. That measures
+  THIS core's output, not the original board, so it is not evidence for the unmeasured original timing.
+- Not yet checked on hardware: VGA/15 kHz RGB output, scandoubler/effects, pause button, DIP menu changes.
+  No sound in this build.
