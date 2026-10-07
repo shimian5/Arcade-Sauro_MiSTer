@@ -47,6 +47,7 @@ module tecfri_main
 	output logic        ym_a0,
 	output logic [7:0]  ym_d,
 	output logic        wd_kick,
+	output logic        int_ack,        // one-clk pulse per interrupt acknowledge cycle
 
 	// Bus observation for tests
 	output logic        bus_wr,         // one-clk pulse per CPU write cycle
@@ -81,6 +82,10 @@ module tecfri_main
 	wire io_wr   = wr_pulse && io_cyc;
 	wire mem_rd  = !rd_n && mem_cyc;
 
+	logic ack_q;
+	always_ff @(posedge clk) ack_q <= !iorq_n && !m1_n;
+	assign int_ack = !iorq_n && !m1_n && !ack_q;
+
 	assign bus_wr = wr_pulse;
 	assign bus_io = io_cyc;
 	assign bus_a  = a;
@@ -99,6 +104,8 @@ module tecfri_main
 	assign rom_addr = a;
 
 	logic [7:0] wram [0:2047];
+	// MAME's NVRAM default is all ones; M10K initialisation keeps that cold-boot state.
+	initial for (int i = 0; i < 2048; i++) wram[i] = 8'hFF;
 	logic [7:0] spr  [0:1023];
 	logic [7:0] bgv  [0:1023];
 	logic [7:0] bgc  [0:1023];

@@ -42,3 +42,4 @@ c5_pin_model_dump.txt
 docs/reference/mame/
 simulation/
 build.log
+build_console.log

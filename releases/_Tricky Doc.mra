@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<misterromdescription>
+	<name>Tricky Doc</name>
+	<setname>trckydoc</setname>
+	<mratimestamp>20261007</mratimestamp>
+	<mameversion>0257</mameversion>
+	<year>1987</year>
+	<manufacturer>Tecfri</manufacturer>
+	<category>Platform</category>
+	<rbf>Tecfri</rbf>
+	<rotation>horizontal</rotation>
+	<!--Development core: video and game CPU implemented; sound and NVRAM saving are not yet implemented.-->
+	<romstruct>00000-0FFFF: main CPU; 10000-17FFF: audio CPU; 18000-27FFF: bg tiles; 28000-37FFF: fg tiles; 38000-57FFF: sprites; 58000-58BFF: colour PROMs R,G,B; 58C00-593FF: SP0256 ROM.</romstruct>
+	<rom index="0" zip="trckydoc.zip" md5="924ad85f45089ea8528f15d9230b5e22" type="split">
+		<part name="trckydoc.d9" crc="c6242fc3" length="0x8000" />
+		<part name="trckydoc.b9" crc="8645c840" length="0x8000" />
+		<part repeat="0x8000">00</part>
+		<part name="trckydoc.e6" crc="ec326392" length="0x8000" />
+		<part name="trckydoc.g6" crc="6a65c088" length="0x8000" />
+		<part repeat="0x10000">00</part>
+		<part name="trckydoc.h1" crc="8b73cbf3" length="0x4000" />
+		<part name="trckydoc.e1" crc="841be98e" length="0x4000" />
+		<part name="trckydoc.c1" crc="1d25574b" length="0x4000" />
+		<part name="trckydoc.a1" crc="436c59ba" length="0x4000" />
+		<part repeat="0x10000">00</part>
+		<part name="tdclr3.prm" crc="671d0140" length="0x100" />
+		<part repeat="0x300">00</part>
+		<part name="tdclr2.prm" crc="874f9050" length="0x100" />
+		<part repeat="0x300">00</part>
+		<part name="tdclr1.prm" crc="57f127b0" length="0x100" />
+		<part repeat="0xB00">00</part>
+	</rom>
+	<rom index="1"><part>01</part></rom>
+	<switches default="66,2F" base="1" page_id="1" page_name="Switches">
+		<dip bits="1" name="Service" ids="Off,On" />
+		<dip bits="2" name="Demo Sounds" ids="Off,On" />
+		<dip bits="3" name="Cabinet" ids="Cocktail,Upright" />
+		<dip bits="4" name="Free Play" ids="Off,On" />
+		<dip bits="5,6" name="Difficulty" ids="Very Hard,Hard,Easy,Very Easy" />
+		<dip bits="7" name="Allow Continue" ids="No,Yes" />
+		<dip bits="8" name="Freeze" ids="Off,On" />
+		<dip bits="9,10" name="Coin A" ids="4C/1C,3C/1C,2C/1C,1C/1C" />
+		<dip bits="11,12" name="Coin B" ids="1C/5C,1C/4C,1C/3C,1C/2C" />
+		<dip bits="13,14" name="Lives" ids="5,4,3,2" />
+	</switches>
+	<buttons names="Button 1,Button 2,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L" />
+</misterromdescription>

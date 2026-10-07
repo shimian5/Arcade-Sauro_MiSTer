@@ -23,3 +23,11 @@ VIDEO_SRC := tb_video.sv ../rtl/tecfri_video.sv ../rtl/tecfri_timing.sv
 video-build:
 	mkdir -p $(OUT)/video
 	$(VERILATOR) --binary --timing --top-module tb_video -Wno-fatal 		--Mdir $(OUT)/video $(VIDEO_SRC) > $(OUT)/video/build.log 2>&1
+
+# Whole machine core: ROM download, reset, original-ROM execution, video (tools/make_core_vectors.py).
+CORE_SRC := tb_core.sv ../rtl/tecfri_core.sv ../rtl/tecfri_rom.sv ../rtl/tecfri_main.sv ../rtl/tecfri_timing.sv \
+	../rtl/tecfri_video.sv ../rtl/cpu_z80.v $(TV80_SRC)
+core-build:
+	mkdir -p $(OUT)/core
+	$(VERILATOR) --binary --timing --top-module tb_core -Wno-fatal +define+TV80_REFRESH \
+		--Mdir $(OUT)/core $(CORE_SRC) > $(OUT)/core/build.log 2>&1

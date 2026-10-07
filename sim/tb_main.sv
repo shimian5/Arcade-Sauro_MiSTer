@@ -35,7 +35,7 @@ module tb_main;
 		.vid_bg_a(10'd0), .vid_fg_a(10'd0), .vid_spr_a(10'd0),
 		.vid_bgv_d(), .vid_bgc_d(), .vid_fgv_d(), .vid_fgc_d(), .vid_spr_d(),
 		.flip(), .palette_bank(), .scroll_bg(), .scroll_fg(), .coin_counter(),
-		.snd_cmd_wr(), .snd_cmd(), .ym_wr(), .ym_a0(), .ym_d(), .wd_kick(),
+		.snd_cmd_wr(), .snd_cmd(), .ym_wr(), .ym_a0(), .ym_d(), .wd_kick(), .int_ack(),
 		.bus_wr(bus_wr), .bus_io(bus_io), .bus_a(bus_a), .bus_d(bus_d));
 
 	integer log_f, ms, i, first_c9 = 0;
