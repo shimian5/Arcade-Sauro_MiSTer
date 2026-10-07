@@ -1,0 +1,5 @@
+Vendored copy (not a submodule), unmodified.
+Source: https://github.com/jotego/jtopl
+Commit: 7ac0c819ad274e208206f2acccbbde80aa06ed1a
+License: GPL-3.0 (see LICENSE)
+Imported: 2026-10-07; only hdl/, LICENSE, README.md retained.

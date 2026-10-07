@@ -38,3 +38,7 @@ c5_pin_model_dump.txt
 *_netlist
 *.cdf
 **/.DS_Store
+# Local MAME source reference (not committed)
+docs/reference/mame/
+simulation/
+build.log
