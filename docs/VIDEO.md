@@ -27,3 +27,12 @@ The attract/gameplay captures use MAME 0.288 with the 0.257 ROM sets.
   them from SDRAM/BRAM (a memory-architecture decision still to be made and measured).
 - No sync/DE/hblank output stage and no Direct Video/scandoubler timing work yet.
 - Video RAM is read live by the renderer; the real board's arbitration with CPU accesses is unknown.
+
+## Tricky Doc sprite attribute bit 3 (open question, evidence so far)
+Only five sprite codes use the bit in 300 attract captures: 462/463, 477/478 (the stage-3 bouncing red
+balls, confirmed by the owner) and 479 (off-screen in the captured frames). `tools/td_variants.py` renders a
+dump under both readings with identical palettes. `docs/reference/images/trckydoc_bit3_A-flipy_vs_B-up6.png`
+(left: flip-y, as implemented; right: no flip and 6 pixels higher) shows the balls resting on the walkway at
+the bottom of their bounce under flip-y, and hovering about 6 pixels above it under the older rule. Which is the
+real board's behaviour is not established; an observation on hardware of the ball at the floor and of the stage-2
+elevator cable (it should be one continuous line, no 6-pixel step) would decide it.
