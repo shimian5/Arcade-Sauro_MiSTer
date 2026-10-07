@@ -1,7 +1,22 @@
 # What can and cannot determine the pixel timing
 
-Provisional geometry: 5 MHz pixel enable, 320 x 280 total, 240 x 224 visible,
-15.625 kHz, 55.80 Hz (PCB-verified refresh per MAME: 55.72 Hz).
+Provisional geometry (leading hypothesis, adopted 2026-10-07): 5 MHz pixel enable,
+**316 x 284** total, 240 x 224 visible, 15.823 kHz line rate, 55.714 Hz
+(refresh quoted as PCB-verified in MAME: 55.72 Hz).
+
+Evidence for 316 x 284 (all circumstantial, none measured on a Sauro/Tricky Doc board):
+1. MAME `holeland.cpp` (Tecfri): Crazy Rally `set_raw(20 MHz/4, 332, 0, 256, 256, 16, 240)`
+   and Hole Land the same 332 at double rate: 5 MHz pixel clock, 332-clock line,
+   76 blanking clocks. Checked in the source; those values carry no "verified on PCB" note.
+2. Keeping 76 blanking clocks with 240 active pixels gives H = 316.
+3. 5 MHz / (316 x 284) = 55.714 Hz, 0.01 % from 55.72 Hz. A 55.72 Hz reading with H = 316
+   predicts 283.97 lines.
+
+Caveats: 240 is MAME's chosen visible area for Sauro, not a known hardware width. The
+family-consistent alternative is **H = 332** (256 active, as Crazy Rally) with V about 270.3:
+332 x 270 = 55.78 Hz (0.11 % off), 332 x 271 = 55.57 Hz. Alternatives rejected on fit:
+320 x 280 = 55.80 Hz. The quoted 55.72 Hz is a two-digit reading, so none of these is excluded
+by it alone.
 
 ## What the Z80 code shows (from MAME traces and disassembly)
 - No port exposes a raster or vblank status bit. Inputs are DSW1/DSW2/P1/P2 only. Firmware

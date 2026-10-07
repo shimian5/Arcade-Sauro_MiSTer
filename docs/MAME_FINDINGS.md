@@ -52,3 +52,25 @@ bus decode, latch, IRQ and input defaults agree with MAME for that window only. 
 nothing about video, sound, wait states or pixel timing. First ISR in RTL occurs at
 1.6324 s machine time (MAME 1.6324 s); with different frame periods the near-equality
 is not independent evidence of timing.
+
+## F7. Video rules verified against MAME frames (milestone 4a, Python reference model)
+`tools/video_ref.py` implements MAME's tile, sprite, scroll and palette-index rules independently
+of the RTL and checks six dumped frames per game (`sim/mame/dump_frame.lua`) for `sauro`, `seawolft`
+and `trckydoc`: **0 inconsistent colour samples out of 161,280 in all 18 frames** (every drawn
+pixel's PROM nibble maps to one MAME colour value per channel). This validates, for attract-mode
+content with scroll, two layers and sprites: 8x8 4bpp tile layout (high nibble first), column-major
+32x32 maps, attribute bits, sprite quarter-ROM row interleave and pair-swapped x, transparency,
+draw order (bg, fg, sprites), palette bank bits, and x scroll semantics (source x = x + scroll).
+- fg scroll uses the permutation `{2,1,4,3,6,5,0,7}` on the low 3 bits (confirmed: the game's
+  intended scroll increments by 1 per frame through that map).
+- **MAME palette DAC (0.288):** channel level = 14*b0 + 31*b1 + 67*b2 + 143*b3 (b0 = LSB of the
+  PROM nibble), full scale 255. 0.257's driver text did not reveal this; it came from the dumps.
+  Real board resistor values are unknown.
+- **0.257 vs 0.288 differences:** Tricky Doc sprite attribute bit 3 is `y += 6` in 0.257 and
+  `flipy` in 0.288. The traces and dumps use the 0.288 binary. The attract frames cannot tell the
+  two apart (both give identical output), so this is **unresolved**; gameplay frames with bit-3
+  sprites (elevator cable, bouncing balls per the 0.257 comment) are needed.
+- Capture pitfall found and fixed: MAME's frame notifier fires after vblank, when the interrupt
+  routine has already written the next scroll values; state must be snapshotted at interrupt entry.
+- Not yet verified: flip_screen (cocktail), gameplay frames (coin/start needed), palette bank bits
+  with the bank latch set.

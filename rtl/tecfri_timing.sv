@@ -1,13 +1,16 @@
 // Tecfri raster counters.
 //
-// PROVISIONAL geometry: MAME gives only 240x224 visible at 55.72 Hz, and the
-// PCB counters (discrete 74LS163/393) have not been traced. 320x280 at a 5 MHz
-// pixel enable gives a 15.625 kHz line rate and 55.80 Hz, 0.14 % above the
-// 55.72 Hz PCB figure. All values are parameters so they can be corrected
-// without touching the machine logic.
+// PROVISIONAL geometry (unmeasured, see docs/PIXEL_TIMING.md): MAME gives only
+// 240x224 visible at 55.72 Hz, and the PCB counters (discrete 74LS163/393) have
+// not been traced. 316 x 284 at a 5 MHz pixel enable is the leading hypothesis:
+// MAME's Tecfri drivers (Crazy Rally, Hole Land) use a 5 MHz clock with a
+// 332-clock line (256 active + 76 blanking); keeping 76 blanking clocks around
+// 240 active pixels gives 316, and 5 MHz / (316 x 284) = 55.714 Hz against the
+// 55.72 Hz PCB figure. Alternative: 332 x 270 (55.78 Hz). All values are
+// parameters so they can be corrected without touching the machine logic.
 module tecfri_timing #(
-	parameter int H_TOTAL  = 320,
-	parameter int V_TOTAL  = 280,
+	parameter int H_TOTAL  = 316,
+	parameter int V_TOTAL  = 284,
 	parameter int H_ACTIVE = 240,
 	parameter int V_ACTIVE = 224
 )(
