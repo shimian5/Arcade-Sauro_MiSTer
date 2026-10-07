@@ -25,7 +25,17 @@ module tecfri_main
 	output logic [15:0] rom_addr,
 	input  logic [7:0]  rom_data,       // valid one clk after rom_addr
 
-	// Outputs to video / sound (video RAM read ports are added with the video block)
+	// Video RAM read ports (second read port of each RAM; one clk latency)
+	input  logic [9:0]  vid_bg_a,
+	input  logic [9:0]  vid_fg_a,
+	input  logic [9:0]  vid_spr_a,
+	output logic [7:0]  vid_bgv_d,
+	output logic [7:0]  vid_bgc_d,
+	output logic [7:0]  vid_fgv_d,
+	output logic [7:0]  vid_fgc_d,
+	output logic [7:0]  vid_spr_d,
+
+	// Outputs to video / sound
 	output logic        flip,
 	output logic [1:0]  palette_bank,
 	output logic [7:0]  scroll_bg,
@@ -109,6 +119,15 @@ module tecfri_main
 		q_fgv  <= fgv[a[9:0]];
 		if (mem_wr && sel_fgc)  fgc[a[9:0]] <= cpu_do;
 		q_fgc  <= fgc[a[9:0]];
+	end
+
+	// Video-side read ports. Tricky Doc has no fg layer; its fg ports read the unused arrays.
+	always_ff @(posedge clk) begin
+		vid_bgv_d <= bgv[vid_bg_a];
+		vid_bgc_d <= bgc[vid_bg_a];
+		vid_fgv_d <= fgv[vid_fg_a];
+		vid_fgc_d <= fgc[vid_fg_a];
+		vid_spr_d <= spr[vid_spr_a];
 	end
 
 	// ------------------------------------------------------ latch / IRQ

@@ -74,3 +74,9 @@ draw order (bg, fg, sprites), palette bank bits, and x scroll semantics (source 
   routine has already written the next scroll values; state must be snapshotted at interrupt entry.
 - Not yet verified: flip_screen (cocktail), gameplay frames (coin/start needed), palette bank bits
   with the bank latch set.
+
+## F8. RTL video block (milestone 4b)
+42 MAME frames (attract and scripted gameplay, all three games) reproduce pixel-exactly through
+`rtl/tecfri_video.sv` in Verilator; see docs/VIDEO.md for scope and limits. Scripted gameplay needs
+`PLAY=1` in `sim/mame/dump_frame.lua` (coin at frame 400, start at 450, pseudo-random controls).
+Tricky Doc's later captures are largely the continue/attract screens (credits 00).

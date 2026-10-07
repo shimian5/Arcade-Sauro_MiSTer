@@ -17,3 +17,9 @@ MAIN_SRC := tb_main.sv ../rtl/tecfri_main.sv ../rtl/tecfri_timing.sv ../rtl/cpu_
 main-build:
 	mkdir -p $(OUT)/main
 	$(VERILATOR) --binary --timing --top-module tb_main -Wno-fatal +define+TV80_REFRESH 		--Mdir $(OUT)/main $(MAIN_SRC) > $(OUT)/main/build.log 2>&1
+
+# Video block vs MAME frame vectors (see tools/prep_video_vectors.py).
+VIDEO_SRC := tb_video.sv ../rtl/tecfri_video.sv ../rtl/tecfri_timing.sv
+video-build:
+	mkdir -p $(OUT)/video
+	$(VERILATOR) --binary --timing --top-module tb_video -Wno-fatal 		--Mdir $(OUT)/video $(VIDEO_SRC) > $(OUT)/video/build.log 2>&1

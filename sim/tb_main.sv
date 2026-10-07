@@ -32,6 +32,8 @@ module tb_main;
 		.clk(clk), .reset_n(reset_n), .cen_cpu(cen), .tricky(tricky), .vblank_start(vblank_start),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),	// MAME defaults, see trace_io.lua reads
 		.rom_addr(rom_addr), .rom_data(rom_data),
+		.vid_bg_a(10'd0), .vid_fg_a(10'd0), .vid_spr_a(10'd0),
+		.vid_bgv_d(), .vid_bgc_d(), .vid_fgv_d(), .vid_fgc_d(), .vid_spr_d(),
 		.flip(), .palette_bank(), .scroll_bg(), .scroll_fg(), .coin_counter(),
 		.snd_cmd_wr(), .snd_cmd(), .ym_wr(), .ym_a0(), .ym_d(), .wd_kick(),
 		.bus_wr(bus_wr), .bus_io(bus_io), .bus_a(bus_a), .bus_d(bus_d));

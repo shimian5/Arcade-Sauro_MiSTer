@@ -218,4 +218,5 @@ def main():
 		print(ch, dict(sorted(m.items())))
 	sys.exit(1 if bad or undrawn else 0)
 
-main()
+if __name__ == "__main__":
+	main()
