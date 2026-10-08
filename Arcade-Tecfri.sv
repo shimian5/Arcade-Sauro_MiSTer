@@ -72,6 +72,12 @@ localparam CONF_STR = {
 	"O[7],Sound test tone,Off,On;",
 	"O[11:8],Debug tone,Off,ROM loaded,CPU running,YM written,YM IRQ,Cmd read,Cmd sent,YM audible,Main loop,INT vector,NMI vector,Wild fetch,YM timer2 start;",
 	"-;",
+	// CRT Adjust is analog/CRT only (core-side, Victory structure): it moves the sync on the
+	// VGA outputs, so the HDMI scaler follows it while On. Off = unchanged output.
+	"D1O[101],CRT Adjust,Off,On;",
+	"H0O[85:80],CRT H-Position,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,+16,+17,+18,+19,+20,+21,+22,+23,+24,+25,+26,+27,+28,+29,+30,+31,-32,-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
+	"H0O[78:74],CRT V-Shift,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
+	"-;",
 	"R[0],Reset and close OSD;",
 	// Button names map to joystick bits 4 and up; keep in step with the MRA button defaults.
 	"J1,Button 1,Button 2,Start 1P,Start 2P,Coin,Pause;",
@@ -83,6 +89,11 @@ localparam CONF_STR = {
 wire        forced_scandoubler;
 wire  [1:0] buttons;
 wire [127:0] status;
+
+// CRT position menu gating (hps_io status_menumask): bit 0 hides H-Position/V-Shift unless
+// CRT Adjust is On; bit 1 disables CRT Adjust while a scandoubler mode is active.
+wire       crt_scandoubler = forced_scandoubler || (status[3:1] != 0);
+wire [15:0] status_menumask = {14'd0, (!status[101] || crt_scandoubler), crt_scandoubler};
 wire [21:0] gamma_bus;
 wire [31:0] joystick_0, joystick_1;
 wire        ioctl_download, ioctl_wr, ioctl_upload, ioctl_rd;
@@ -103,7 +114,7 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask(16'd0),
+	.status_menumask(status_menumask),
 
 	.joystick_0(joystick_0),
 	.joystick_1(joystick_1),
@@ -233,6 +244,10 @@ pause #(.CLKSPD(80)) pause_control
 
 ///////////////////////   VIDEO   //////////////////////////////////
 
+// arcade_video drives internal mixer wires; the CRT position stage below drives the VGA outputs.
+wire        mixer_ce, mixer_hs, mixer_vs, mixer_de;
+wire  [7:0] mixer_r, mixer_g, mixer_b;
+
 arcade_video #(.WIDTH(256), .DW(24)) arcade_video
 (
 	.clk_video(clk_sys),
@@ -244,19 +259,52 @@ arcade_video #(.WIDTH(256), .DW(24)) arcade_video
 	.VSync(core_vsync),
 
 	.CLK_VIDEO(CLK_VIDEO),
-	.CE_PIXEL(CE_PIXEL),
-	.VGA_R(VGA_R),
-	.VGA_G(VGA_G),
-	.VGA_B(VGA_B),
-	.VGA_HS(VGA_HS),
-	.VGA_VS(VGA_VS),
-	.VGA_DE(VGA_DE),
+	.CE_PIXEL(mixer_ce),
+	.VGA_R(mixer_r),
+	.VGA_G(mixer_g),
+	.VGA_B(mixer_b),
+	.VGA_HS(mixer_hs),
+	.VGA_VS(mixer_vs),
+	.VGA_DE(mixer_de),
 	.VGA_SL(VGA_SL),
 
 	.fx(status[3:1]),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus)
 );
+
+// CRT position controls are slow OSD settings: synchronize them into the CLK_VIDEO domain.
+// Packed: [12] scandoubler (CRT path off), [11] CRT Adjust, [10:5] H-Position, [4:0] V-Shift.
+(* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED" *)
+reg [12:0] crt_option_meta=0, crt_option_video=0;
+// Core vblank crosses from clk_sys into CLK_VIDEO (2-flop synchronizer).
+(* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED" *)
+reg        core_vblank_meta=0, core_vblank_video=0;
+always @(posedge CLK_VIDEO) begin
+	crt_option_meta<={crt_scandoubler,status[101],status[85:80],status[78:74]};
+	crt_option_video<=crt_option_meta;
+	core_vblank_meta<=core_vblank;
+	core_vblank_video<=core_vblank_meta;
+end
+
+// Core-side CRT position (Victory structure). Position-only: RGB, CE and blanking pass
+// unchanged; HSync/VSync are delayed only when CRT Adjust is On and scandoubling is off.
+// With the adjust Off, VGA_HS/VGA_VS are the arcade_video sync, bit for bit.
+// vb_in is the true core vblank (not the combined DE blank), per the CRT-Adjust notes.
+wire [23:0] crt_rgb;
+tecfri_crt_position #(.HTOTAL(316), .VTOTAL(284), .HSYNC_COL(252)) crt_position
+(
+	.clk(CLK_VIDEO), .ce_pix(mixer_ce),
+	.enabled(crt_option_video[11]), .scandoubler(crt_option_video[12]),
+	.hposition(crt_option_video[10:5]), .vshift(crt_option_video[4:0]),
+	.rgb_in({mixer_r,mixer_g,mixer_b}),
+	.hs_in(mixer_hs), .vs_in(mixer_vs), .hb_in(!mixer_de), .vb_in(core_vblank_video),
+	.rgb_out(crt_rgb), .ce_out(CE_PIXEL), .hs_out(VGA_HS), .vs_out(VGA_VS),
+	.hb_out(), .vb_out()
+);
+// DE is taken from arcade_video (not moved by the CRT position stage).
+assign {VGA_R,VGA_G,VGA_B} = crt_rgb;
+assign VGA_DE = mixer_de;
 
 reg  [26:0] act_cnt;
 always @(posedge clk_sys) act_cnt <= act_cnt + 1'd1;
