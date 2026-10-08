@@ -11,7 +11,7 @@
 // ioctl index 1 carries one byte: bit 0 = Tricky Doc board, 0 = Sauro family board.
 //
 // Clocks (clk = 80 MHz): one 5 MHz enable (1/16) drives the main CPU and the pixel clock.
-// 4 MHz (1/20) and 2.5 MHz (1/32) enables for the audio side arrive with the sound milestone.
+// the audio side derives 4 MHz (1/20) and 2.5 MHz (1/32) enables from the same clock.
 // MAME's CPU clock plan is used; the second crystal on the Sauro board (marked 8...) is not
 // yet understood and is not modelled.
 module tecfri_core #(
@@ -47,8 +47,17 @@ module tecfri_core #(
 	output logic [8:0]  pix_x,
 	output logic [8:0]  pix_y,
 	output logic        rom_ready,   // a complete ROM download has been received
+	output logic signed [15:0] audio,   // mono mix, signed; muted while paused
 
 	// Observation for tests
+	output logic signed [15:0] dbg_ym,
+	output logic signed [15:0] dbg_speech,
+	output logic        dbg_ym_wr,
+	output logic        dbg_ym_a0,
+	output logic [7:0]  dbg_ym_d,
+	output logic        dbg_ald_wr,
+	output logic [7:0]  dbg_ald_d,
+	output logic        dbg_cmd_rd,
 	output logic        dbg_int_ack,
 	output logic        dbg_bus_wr,
 	output logic        dbg_bus_io,
@@ -89,6 +98,7 @@ module tecfri_core #(
 	// ------------------------------------------------------------ ROM storage (M10K)
 	wire [24:0] a = ioctl_addr;
 	wire we_main = dl_we && a < 25'h10000;
+	wire we_audio = dl_we && a >= 25'h10000 && a < 25'h18000;
 	wire we_bg   = dl_we && a >= 25'h18000 && a < 25'h28000;
 	wire we_fg   = dl_we && a >= 25'h28000 && a < 25'h38000;
 	wire we_spr  = dl_we && a >= 25'h38000 && a < 25'h58000;
@@ -151,6 +161,16 @@ module tecfri_core #(
 		.spr_rom_a(spr_a), .spr_rom_d(spr_q),
 		.pal_a(pal_a), .pal_r(pal_rq[3:0]), .pal_g(pal_gq[3:0]), .pal_b(pal_bq[3:0]),
 		.out_r(vid_r), .out_g(vid_g), .out_b(vid_b), .out_de(out_de), .out_x(out_x), .out_y(out_y));
+
+	// ------------------------------------------------------------ sound
+	tecfri_audio audio_sys (
+		.clk(clk), .reset_n(machine_reset_n), .pause(pause), .tricky(tricky),
+		.rom_we(we_audio), .rom_wa(a[14:0]), .rom_wd(ioctl_data),
+		.snd_cmd_wr(snd_cmd_wr), .snd_cmd(snd_cmd),
+		.main_ym_wr(ym_wr), .main_ym_a0(ym_a0), .main_ym_d(ym_d),
+		.ym_out(dbg_ym), .speech_out(dbg_speech), .mix_out(audio),
+		.dbg_ym_wr(dbg_ym_wr), .dbg_ym_a0(dbg_ym_a0), .dbg_ym_d(dbg_ym_d),
+		.dbg_ald_wr(dbg_ald_wr), .dbg_ald_d(dbg_ald_d), .dbg_cmd_rd(dbg_cmd_rd));
 
 	// Blanking and sync are derived from the registered pixel coordinates, so they stay aligned
 	// with the RGB output. Sync placement is provisional.

@@ -37,8 +37,29 @@ if audio then
 		log("A", "cmd read -> %02x", data & 0xff)
 	end)
 end
+
+-- Optional scripted input (env PLAY=1): coin at frame 400, start 1 at 450, then a deterministic
+-- pseudo-random pattern of joystick and button presses (same as dump_frame.lua).
+local play = os.getenv("PLAY") == "1"
+local function field(port, mask) return m.ioport.ports[port]:field(mask) end
+local rng, held = 12345, 0
+local function drive_input()
+	if not play then return end
+	field(":P1", 0x04):set_value((frame >= 400 and frame < 410) and 1 or 0)
+	field(":P2", 0x04):set_value((frame >= 450 and frame < 460) and 1 or 0)
+	if frame >= 520 and frame % 20 == 0 then
+		rng = (rng * 1103515245 + 12345) & 0x7fffffff
+		held = (rng >> 8) & 0xff
+	end
+	if frame >= 520 then
+		for bit, mask in pairs({ [0] = 0x01, [1] = 0x02, [4] = 0x10, [5] = 0x20, [6] = 0x40, [7] = 0x80 }) do
+			field(":P1", mask):set_value(((held >> bit) & 1) == 1 and 1 or 0)
+		end
+	end
+end
 tecfri_frame_notifier = emu.add_machine_frame_notifier(function()
 	frame = frame + 1
+	drive_input()
 	if frame % 60 == 1 then
 		local s = string.format("frame %d t=%.6f main IM=%s I=%02x IFF1=%s", frame, emu.time(), tostring(main.state["IM"] and main.state["IM"].value), main.state["I"].value, tostring(main.state["IFF1"] and main.state["IFF1"].value))
 		if audio then s = s .. string.format(" | audio IM=%s IFF1=%s", tostring(audio.state["IM"].value), tostring(audio.state["IFF1"].value)) end

@@ -39,10 +39,10 @@ assign HDMI_FREEZE = 0;
 assign HDMI_BLACKOUT = 0;
 assign HDMI_BOB_DEINT = 0;
 
-// Sound is not implemented yet (YM3812 and SP0256 follow in a later milestone).
-assign AUDIO_S = 0;
-assign AUDIO_L = 0;
-assign AUDIO_R = 0;
+wire signed [15:0] core_audio;
+assign AUDIO_S = 1;     // signed samples
+assign AUDIO_L = core_audio;
+assign AUDIO_R = core_audio;
 assign AUDIO_MIX = 0;
 
 assign LED_DISK = 0;
@@ -183,7 +183,10 @@ tecfri_core core
 	.pix_x(),
 	.pix_y(),
 	.rom_ready(),
+	.audio(core_audio),
 
+	.dbg_ym(), .dbg_speech(), .dbg_ym_wr(), .dbg_ym_a0(), .dbg_ym_d(),
+	.dbg_ald_wr(), .dbg_ald_d(), .dbg_cmd_rd(),
 	.dbg_int_ack(),
 	.dbg_bus_wr(),
 	.dbg_bus_io(),

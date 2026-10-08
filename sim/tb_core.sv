@@ -5,6 +5,8 @@
 //   +IMAGE=<hex>  assembled image (tools/make_core_vectors.py)   +TRICKY
 //   +F0..+F7=<n>  acknowledge counts at which the last complete frame is written
 //   +OUT=<prefix> output prefix (files <prefix>_<n>.hex)
+//   +WAV             write the mixed audio as 16-bit mono raw PCM at ~48 kHz to <prefix>.raw (tools/raw2wav.py)
+//                    and the sound-chip write log to <prefix>_audio.log
 //   +PAUSE_AT=<n> +PAUSE_FRAMES=<m>  hold pause for m frame times after the nth acknowledge
 `timescale 1ps/1ps
 module tb_core;
@@ -18,6 +20,9 @@ module tb_core;
 	reg [24:0] ioctl_addr = 25'd0;
 	reg [7:0]  ioctl_data = 8'd0;
 
+	wire signed [15:0] audio, dbg_ym, dbg_speech;
+	wire        dbg_ym_wr, dbg_ym_a0, dbg_ald_wr, dbg_cmd_rd;
+	wire [7:0]  dbg_ym_d, dbg_ald_d;
 	wire        ce_pix, hblank, vblank, hsync, vsync, rom_ready, dbg_int_ack, dbg_bus_wr, dbg_bus_io;
 	wire [7:0]  vid_r, vid_g, vid_b, dbg_bus_d;
 	wire [8:0]  pix_x, pix_y;
@@ -30,7 +35,9 @@ module tb_core;
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),
 		.ce_pix(ce_pix), .vid_r(vid_r), .vid_g(vid_g), .vid_b(vid_b),
 		.hblank(hblank), .vblank(vblank), .hsync(hsync), .vsync(vsync),
-		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready),
+		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready), .audio(audio),
+		.dbg_ym(dbg_ym), .dbg_speech(dbg_speech), .dbg_ym_wr(dbg_ym_wr), .dbg_ym_a0(dbg_ym_a0), .dbg_ym_d(dbg_ym_d),
+		.dbg_ald_wr(dbg_ald_wr), .dbg_ald_d(dbg_ald_d), .dbg_cmd_rd(dbg_cmd_rd),
 		.dbg_int_ack(dbg_int_ack), .dbg_bus_wr(dbg_bus_wr), .dbg_bus_io(dbg_bus_io),
 		.dbg_bus_a(dbg_bus_a), .dbg_bus_d(dbg_bus_d));
 
@@ -63,6 +70,29 @@ module tb_core;
 
 	always @(posedge clk) if (ce_pix && !hblank && !vblank) cur[pix_y * 240 + pix_x] <= {vid_r, vid_g, vid_b};
 
+	// Audio export: sample the mix at about 48 kHz, and log chip writes with machine time in ps.
+	integer wav_f = 0, log_f = 0, wav_div = 0, wav_n = 0, ym_writes = 0, ald_writes = 0, cmd_reads = 0;
+	integer ym_peak = 0, sp_peak = 0, mix_peak = 0;
+	reg [15:0] wav_s;
+	always @(posedge clk) begin
+		if (wav_f != 0) begin
+			wav_div = wav_div + 1;
+			if (wav_div >= 1667) begin
+				wav_div = 0;
+				wav_s = audio;
+				$fwrite(wav_f, "%c%c", wav_s[7:0], wav_s[15:8]);
+				wav_n = wav_n + 1;
+			end
+		end
+		if (dbg_ym_wr)  begin ym_writes = ym_writes + 1;   if (log_f != 0) $fwrite(log_f, "%0t YM a0=%b d=%02x\n", $time, dbg_ym_a0, dbg_ym_d); end
+		if (dbg_ald_wr) begin ald_writes = ald_writes + 1; if (log_f != 0) $fwrite(log_f, "%0t ALD %02x\n", $time, dbg_ald_d); end
+		if (core.snd_cmd_wr) if (log_f != 0) $fwrite(log_f, "%0t CMD %02x\n", $time, core.snd_cmd);
+		if (dbg_cmd_rd) begin cmd_reads = cmd_reads + 1; end
+		if ((dbg_ym < 0 ? -dbg_ym : dbg_ym) > ym_peak) ym_peak = (dbg_ym < 0 ? -dbg_ym : dbg_ym);
+		if ((dbg_speech < 0 ? -dbg_speech : dbg_speech) > sp_peak) sp_peak = (dbg_speech < 0 ? -dbg_speech : dbg_speech);
+		if ((audio < 0 ? -audio : audio) > mix_peak) mix_peak = (audio < 0 ? -audio : audio);
+	end
+
 	reg vb_q = 1'b0;
 	always @(posedge clk) begin
 		vb_q <= vblank;
@@ -94,6 +124,10 @@ module tb_core;
 		end
 		if (acks > maxwant) begin
 			$display("done after %0d interrupt acknowledges (%0d after resume)", acks, after_acks);
+			$display("audio: %0d YM writes, %0d speech writes, %0d sound-command reads, %0d PCM samples, peaks ym=%0d speech=%0d mix=%0d",
+				ym_writes, ald_writes, cmd_reads, wav_n, ym_peak, sp_peak, mix_peak);
+			if (wav_f != 0) $fclose(wav_f);
+			if (log_f != 0) $fclose(log_f);
 			$finish;
 		end
 	end
@@ -110,6 +144,10 @@ module tb_core;
 		if (!$value$plusargs("IMAGE=%s", imgname)) $fatal(1, "need +IMAGE=");
 		if (!$value$plusargs("OUT=%s", outname)) outname = "core";
 		tricky_arg = $test$plusargs("TRICKY");
+		if ($test$plusargs("WAV")) begin
+			$sformat(fname, "%0s.raw", outname);       wav_f = $fopen(fname, "wb");
+			$sformat(fname, "%0s_audio.log", outname); log_f = $fopen(fname, "w");
+		end
 		if ($value$plusargs("PAUSE_AT=%d", k)) pause_at = k;
 		if ($value$plusargs("PAUSE_FRAMES=%d", k)) pause_frames = k;
 		for (i = 0; i < 8; i = i + 1) begin
@@ -128,9 +166,25 @@ module tb_core;
 		$display("download complete, reset released (rom_ready=%0d)", rom_ready);
 	end
 
+	// Progress line every 100 ms of machine time (keeps long runs visibly alive on the host side).
+	initial forever begin
+		#100000000000;
+		$display("progress t=%0t ps, %0d interrupt acknowledges", $time, acks);
+		$fflush;
+	end
+
+	integer stop_ms = 4000;
+	time stop_t;
 	initial begin
-		#4000000000000;						// 4 s of machine time as a safety stop
+		if ($value$plusargs("MS=%d", stop_ms)) ;
+		stop_t = stop_ms;
+		stop_t = stop_t * 64'd1000000000;		// ps; 64-bit so multi-second limits do not overflow
+		#(stop_t);							// machine time safety stop (default 4 s, +MS=<ms> to change)
 		$display("TIMEOUT after %0d acknowledges", acks);
+		$display("audio: %0d YM writes, %0d speech writes, %0d sound-command reads, %0d PCM samples, peaks ym=%0d speech=%0d mix=%0d",
+			ym_writes, ald_writes, cmd_reads, wav_n, ym_peak, sp_peak, mix_peak);
+		if (wav_f != 0) $fclose(wav_f);
+		if (log_f != 0) $fclose(log_f);
 		$finish;
 	end
 endmodule

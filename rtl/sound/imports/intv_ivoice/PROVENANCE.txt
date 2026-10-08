@@ -1,0 +1,8 @@
+Vendored copy (not a submodule), unmodified.
+Source: https://github.com/MiSTer-devel/Intv_MiSTer  (rtl/intv/ivoice.vhd and rtl/base/base_pack.vhd)
+Commit: 808bbcb4acf30950b7c33144571be2fc95a3498c (master, 2026-10-01)
+Authorship: file headers read "DO 9/2019"; ivoice.vhd states it was developed with the help of the JZINTV emulator.
+Licence: the repository carries no LICENSE file and the files contain no licence text. It is part of a MiSTer core
+built on the GPL-licensed MiSTer sys framework, and the project owner's position (2026-10-07) is that such cores are
+GPL-2/3. Treat as GPL; attribution retained here. If the author states different terms, revisit.
+Imported: 2026-10-07 for evaluation as the SP0256 (ROM-executing) voice; see docs/AUDIO.md.
