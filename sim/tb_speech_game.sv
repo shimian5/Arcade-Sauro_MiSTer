@@ -19,7 +19,7 @@ module tb_speech_game;
 
 	integer peak = 0, spt_n = 0, ph = 0;
 	longint t28 = 64'd10600000000000;
-	initial if ($value$plusargs("PH=%d", ph)) t28 = t28 + ph * 6250;
+	initial if ($value$plusargs("PH=%d", ph)) t28 = t28 + ph * 6250 * 311;
 	reg signed [15:0] spt_last = 0;
 	always @(posedge clk) if ($time > t28 && dut.ce && dut.speech.sample_stb && dut.s_out !== spt_last && spt_n < 30) begin
 		spt_last = dut.s_out; spt_n = spt_n + 1;

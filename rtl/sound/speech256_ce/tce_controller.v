@@ -19,7 +19,11 @@
 // Speech256 controller / sequencer
 //
 
-module TCE_CONTROLLER (
+module TCE_CONTROLLER #(
+        // ADAPTATION: 1 = start an allophone's coefficient burst only while the filter is idle (see ADAPTATION.md);
+        // 0 = original behaviour.
+        parameter SAFE_COEF_LOAD = 1
+    ) (
         clk,
         ce,        // ADAPTATION: clock enable,        // global Speech256 clock
         rst_an,     
@@ -31,7 +35,8 @@ module TCE_CONTROLLER (
         coeff_out,  // 8-bit coefficient data out
         coeff_stb,  // '1' when coeff_out holds new coefficient data
         clear_states, // outputs '1' to reset filter states
-        period_done_in // should be '1' when the source finished a period
+        period_done_in, // should be '1' when the source finished a period
+        filter_idle_in  // ADAPTATION: '1' while the filter FSM is idle (its done output)
     );
 
 	//////////// CLOCK //////////
@@ -54,6 +59,7 @@ module TCE_CONTROLLER (
     input [5:0] data_in;
     input       data_stb;
     input       period_done_in; // used for duration counting
+    input       filter_idle_in;
 
     // internal counter and data registers
     wire [7:0]  rom_data;
@@ -119,6 +125,25 @@ module TCE_CONTROLLER (
         .c8_in(rom_data),
         .c10_out(coeff10bit)
     );
+
+    // ADAPTATION: the filter shares its coefficient ring with the controller's load and has no interlock, so a burst that
+    // lands while the filter is mid-computation interleaves old and new coefficients (an unstable set, heard as a
+    // full-scale burst). The filter is idle for about a third of each 256-ce sample frame; a burst of 12 enabled
+    // clocks is only started in the first part of that window.
+    reg  [6:0] idle_cnt;
+    always @(posedge clk or negedge rst_an)
+    begin
+        if (rst_an == 0)
+            idle_cnt <= 7'd0;
+        else if (ce)
+        begin
+            if (!filter_idle_in)
+                idle_cnt <= 7'd0;
+            else if (idle_cnt != 7'd127)
+                idle_cnt <= idle_cnt + 7'd1;
+        end
+    end
+    wire coef_window = (SAFE_COEF_LOAD == 0) ? 1'b1 : (filter_idle_in && idle_cnt < 7'd40);
 
     assign rom_en = ce;   // ADAPTATION: ROM read only on enabled clocks
     
@@ -351,15 +376,21 @@ module TCE_CONTROLLER (
                     rom_addr_sel <= ROM_ADDR_NOP;
                     if (serve_next_allo_data == 1)
                     begin
-                        serve_pitch_data <= 1;
-                        dur_cnt_clear    <= 1;
                         if (cur_cmd == 4'd2)
                         begin
-                            clear_states <= 1;
-                            next_state <= S_LOADCOEF1;
+                            // ADAPTATION: wait for the filter-idle window before loading coefficients
+                            if (coef_window)
+                            begin
+                                serve_pitch_data <= 1;
+                                dur_cnt_clear    <= 1;
+                                clear_states <= 1;
+                                next_state <= S_LOADCOEF1;
+                            end
                         end
                         else
                         begin
+                            serve_pitch_data <= 1;
+                            dur_cnt_clear    <= 1;
                             next_state <= S_CMDDECODE;
                         end
                         

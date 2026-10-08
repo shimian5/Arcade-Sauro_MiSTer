@@ -21,7 +21,7 @@ module tb_speech_equiv;
 
 	SPEECH256_TOP orig (.clk(clk_o), .rst_an(rst_an), .ldq(ldq_o), .data_in(data), .data_stb(stb),
 		.pwm_out(pwm_o), .sample_out(s_o), .sample_stb(st_o));
-	TCE_SPEECH256_TOP adapted (.clk(clk), .ce(ce), .rst_an(rst_an), .ldq(ldq_a), .data_in(data), .data_stb(stb),
+	TCE_SPEECH256_TOP #(.SAFE_COEF_LOAD(0)) adapted (.clk(clk), .ce(ce), .rst_an(rst_an), .ldq(ldq_a), .data_in(data), .data_stb(stb),
 		.pwm_out(pwm_a), .sample_out(s_a), .sample_stb(st_a));
 
 	integer seq_i = 0, n_samples = 0, mismatches = 0, n_cmp = 0, peak = 0, loads = 0;

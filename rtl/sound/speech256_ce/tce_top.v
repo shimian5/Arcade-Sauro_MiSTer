@@ -18,7 +18,9 @@
 // Speech256 top level
 //
 
-module TCE_SPEECH256_TOP (
+module TCE_SPEECH256_TOP #(
+        parameter SAFE_COEF_LOAD = 1       // ADAPTATION: see TCE_CONTROLLER
+    ) (
         clk,
         ce,        // ADAPTATION: clock enable,        // global Speech256 clock (256*10kHz)
         rst_an,     
@@ -113,7 +115,7 @@ module TCE_SPEECH256_TOP (
     );    
     `endif
 
-    TCE_CONTROLLER u_controller (
+    TCE_CONTROLLER #(.SAFE_COEF_LOAD(SAFE_COEF_LOAD)) u_controller (
         .clk        (clk),
         .ce         (ce),
         .rst_an     (rst_an),
@@ -125,7 +127,8 @@ module TCE_SPEECH256_TOP (
         .coeff_out  (coef_bus),
         .coeff_stb  (coef_load),
         .clear_states (clear_states),
-        .period_done_in (period_done)
+        .period_done_in (period_done),
+        .filter_idle_in (src_strobe)
     );
 
     assign sample_out = sig_filter[15:0];
