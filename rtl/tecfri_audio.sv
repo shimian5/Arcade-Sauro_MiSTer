@@ -152,7 +152,16 @@ module tecfri_audio (
 		.clk(clk), .reset_n(reset_n && !tricky), .hold(pause),
 		.ald_wr(ald_wr), .ald_data(cpu_do), .lrq_n(lrq_n), .sample(sp_sample)
 	);
-	assign nmi_n      = lrq_n;
+	// The speech model raises LRQ (ready) within microseconds of reset release, which the audio CPU sees as an NMI edge
+	// before its first instructions have set SP: the return address is lost and the CPU runs away (found with randomised
+	// power-up state; the zero-initialised simulation never showed it). The firmware starts with DI / LD SP, so NMI is
+	// held off for the first 1 ms of audio CPU time. The real chip's LRQ timing after reset is unmeasured.
+	logic [12:0] nmi_hold;
+	always_ff @(posedge clk or negedge reset_n) begin
+		if (!reset_n)                         nmi_hold <= 13'd0;
+		else if (cen4 && !nmi_hold[12])       nmi_hold <= nmi_hold + 13'd1;
+	end
+	assign nmi_n      = lrq_n || !nmi_hold[12];
 	assign speech_out = sp_sample;
 
 	// ------------------------------------------------------------ diagnostic event flags (sticky, cleared by machine reset)
