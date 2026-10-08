@@ -70,3 +70,19 @@ Listening copies: simulation/audio/rtl_sauro_boot_9s.wav and mame_sauro_boot_8s.
 - Inference to check on hardware: the second crystal on the Sauro board is marked 8.xxx and sits near the audio section; 8 MHz / 2 = 4 MHz
   would feed the sound CPU, YM3812 and SP0256 (MAME's 20 MHz / 5 gives the same 4 MHz). Tricky Doc has only the 20 MHz crystal, matching
   MAME's 2.5 MHz (20 / 8) YM3812 there. Numerically nothing changes in this core.
+
+## Outcome of the delegated ivoice/SP0256 timing analysis (2026-10-07)
+Corrections to the "ivoice.vhd read-through" above, from the agent's analysis (primary documentation: Zbiciak/Palazzolo SP0256 Instruction Set,
+CPCWiki SP0256 pages, the Radio Shack AL2 datasheet) and my own checks:
+- ivoice's repeat counter DOES count pitch periods (it only decrements when the pulse counter reaches zero), so finding 1 above was wrong, and the
+  pulse spacing PR (finding 3) agrees with the documentation (MAME's PR+1 is the odd one). Interpolation per sample (finding 2) is a real bug but
+  AL2 never uses interpolation.
+- The real ivoice bugs are: swapped SETMODE repeat MSBs, a full extra excitation period after every control instruction, and PAUSE running at stale
+  pitch. With those fixed, ivoice matches the documentation-based model to 0.2 percent on 18 allophones (my ModelSim re-run of the clean patched file
+  reproduces the agent's numbers for 1B, 07 and 2D exactly: 69.8, 42.5, 63.8 ms). Files: rtl/sound/ivoice_fixed/.
+- MAME is off in two places relative to the documentation: impulse spacing per+1 (docs: PR) and `CLOCK_DIVIDER = 7*6*8 = 336` (I confirmed this in
+  sp0256.cpp line 34), which makes a 4 MHz chip run at 11.9 kHz instead of the documented 3.12 MHz/312 = 10 kHz ratio (12.82 kHz at 4 MHz). MAME's
+  speech therefore runs about 8 percent slow. The 312 divider rests on indirect evidence (the datasheet's pause lengths and the CPCWiki derivation).
+- Consequence for Speech256: its whole-phrase lengths were within 6 percent of MAME only because it runs at 12.82 kHz while MAME runs slow; its
+  individual allophone lengths disagree with the documented timing (e.g. 04: 10 ms vs 155 ms, 38: 243 ms vs 106 ms).
+- Open: what time control instructions really take on silicon (no source; zero is assumed), and any comparison of audio content.

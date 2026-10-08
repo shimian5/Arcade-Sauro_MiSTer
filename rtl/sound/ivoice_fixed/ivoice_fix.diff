@@ -1,0 +1,87 @@
+--- ../../rtl/sound/imports/intv_ivoice/ivoice.vhd
++++ ivoice_patched_clean.vhd
+@@ -815,6 +815,7 @@
+   SIGNAL divcpt : uint9;
+   SIGNAL phiper : std_logic;
+   SIGNAL noise : boolean;
++  SIGNAL ptick : boolean;
+   SIGNAL ald,ald_clr : std_logic;
+   SIGNAL ald_ad : uv8;
+ 
+@@ -837,6 +838,7 @@
+   
+ BEGIN
+   
++
+   ------------------------------------------------------------------------------
+   -- Reg access
+   Reg:PROCESS (clksys,reset_na) IS
+@@ -1059,10 +1061,12 @@
+         CASE state IS
+           -------------------------------------------------
+           WHEN sIDLE =>
+-            IF phiper='1' THEN -- 10KHz sampling rate
+-              IF act='1' AND nexti THEN
+-                state<=sDECODE1;
+-              ELSIF (repeat/="000000" AND repeat/="000001") AND act='1' THEN
++            IF act='1' AND nexti THEN
++              -- Control instruction (SETPAGE/SETMODE/JMP/JSR/RTS) takes no
++              -- output time: fetch the next instruction immediately
++              state<=sDECODE1;
++            ELSIF phiper='1' THEN -- 10KHz sampling rate
++              IF (repeat/="000000" AND repeat/="000001") AND act='1' THEN
+                 -- Continue current sound
+                 state<=sGENE1;
+                 repeat<=repeat-1;
+@@ -1123,7 +1127,7 @@
+               WHEN SETMODE =>
+                 nexti<=true;
+                 mode<=inst(5 DOWNTO 4);
+-                repeat(5 DOWNTO 4)<=inst(7 DOWNTO 6);
++                repeat(5 DOWNTO 4)<=inst(6) & inst(7); -- RR field is LSB first
+                 
+               WHEN JMP =>
+                 nexti<=true;
+@@ -1240,6 +1244,10 @@
+             
+             IF micro.last=1 THEN
+               state<=sGENE1;
++              IF micro.op=SETMODE OR micro.op=JMP OR micro.op=JSR OR
++                 micro.op=RTS THEN
++                state<=sIDLE; -- no excitation period for control instructions
++              END IF;
+             END IF;
+             count<=x"00";
+             
+@@ -1255,8 +1263,8 @@
+             lfsr<=('0' & lfsr(14 DOWNTO 1)) XOR
+                    (lfsr(0) & "0000000000000" & lfsr(0));
+             
+-            IF reg_dr=x"00" THEN
+-              -- Period = 0 : Noise generator
++            IF reg_dr=x"00" OR silent='1' THEN
++              -- Period = 0 : Noise generator (PAUSE: period 64, as noise)
+               noise<=true;
+               IF count>0 THEN
+                 count<=count-1;
+@@ -1275,8 +1283,10 @@
+                 sig<='1';
+               END IF;
+             END IF;
++            -- Interpolation applied once per pitch period (or 64-sample noise period)
++            ptick<=(count=0);
+             reg_dw<=reg_dr+diff;
+-            reg_wr<=to_std_logic(diff/=0);
++            reg_wr<=to_std_logic(diff/=0 AND count=0);
+             state<=sGENE3;
+             
+           -----------------------------------------------
+@@ -1288,7 +1298,7 @@
+           WHEN sGENE4 =>
+             -- <AM>
+             reg_dw<=reg_dr+diff;
+-            reg_wr<=to_std_logic(diff/=0);
++            reg_wr<=to_std_logic(diff/=0 AND ptick);
+             IF noise THEN
+               samp<=mux(sig='0',-amp_decode(reg_dr),amp_decode(reg_dr));
+             ELSE
