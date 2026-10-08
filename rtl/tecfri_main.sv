@@ -47,6 +47,12 @@ module tecfri_main
 	output logic        ym_a0,
 	output logic [7:0]  ym_d,
 	output logic        wd_kick,
+
+	// Work RAM E000-E7FF lives in tecfri_nvram (battery RAM); registered one-clk read
+	output logic        wram_wr,
+	output logic [10:0] wram_a,
+	output logic [7:0]  wram_d,
+	input  logic [7:0]  wram_q,
 	output logic        int_ack,        // one-clk pulse per interrupt acknowledge cycle
 
 	// Bus observation for tests
@@ -103,19 +109,18 @@ module tecfri_main
 
 	assign rom_addr = a;
 
-	logic [7:0] wram [0:2047];
-	// MAME's NVRAM default is all ones; M10K initialisation keeps that cold-boot state.
-	initial for (int i = 0; i < 2048; i++) wram[i] = 8'hFF;
 	logic [7:0] spr  [0:1023];
 	logic [7:0] bgv  [0:1023];
 	logic [7:0] bgc  [0:1023];
 	logic [7:0] fgv  [0:1023];
 	logic [7:0] fgc  [0:1023];
-	logic [7:0] q_wram, q_spr, q_bgv, q_bgc, q_fgv, q_fgc;
+	logic [7:0] q_spr, q_bgv, q_bgc, q_fgv, q_fgc;
+	assign wram_wr = mem_wr && sel_wram;
+	assign wram_a  = a[10:0];
+	assign wram_d  = cpu_do;
+	wire [7:0] q_wram = wram_q;
 
 	always_ff @(posedge clk) begin
-		if (mem_wr && sel_wram) wram[a[10:0]] <= cpu_do;
-		q_wram <= wram[a[10:0]];
 		if (mem_wr && sel_spr)  spr[a[9:0]] <= cpu_do;
 		q_spr  <= spr[a[9:0]];
 		if (mem_wr && sel_bgv)  bgv[a[9:0]] <= cpu_do;

@@ -63,7 +63,7 @@ def main():
 	<category>{meta['category']}</category>
 	<rbf>Tecfri</rbf>
 	<rotation>horizontal</rotation>
-	<!--Development core: video and game CPU implemented; sound and NVRAM saving are not yet implemented.-->
+	<!--Development core: video, game CPU, sound and battery RAM saving implemented; speech accuracy and timing unverified.-->
 	<romstruct>00000-0FFFF: main CPU; 10000-17FFF: audio CPU; 18000-27FFF: bg tiles; 28000-37FFF: fg tiles; 38000-57FFF: sprites; 58000-58BFF: colour PROMs R,G,B; 58C00-593FF: SP0256 ROM.</romstruct>
 	<rom index="0" zip="{meta['zips']}" md5="{md5}" type="split">
 {parts_xml(name, rl.IMAGE_SIZE)}
@@ -73,6 +73,7 @@ def main():
 {dips}
 	</switches>
 	<buttons names="Button 1,Button 2,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L" />
+	<nvram index="4" size="2048" />
 </misterromdescription>
 """
 		(out_dir / meta["file"]).write_text(text, encoding="utf-8")

@@ -5,6 +5,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_main.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_video.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_timing.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_rom.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_nvram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_audio.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tecfri_speech.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/pause.sv

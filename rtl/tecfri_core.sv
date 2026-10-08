@@ -26,6 +26,8 @@ module tecfri_core #(
 	input  logic        pause,          // freezes the CPUs, video continues
 
 	input  logic        ioctl_download,
+	input  logic        ioctl_upload,      // NVRAM save stream (index 4)
+	input  logic        ioctl_rd,
 	input  logic        ioctl_wr,
 	input  logic [15:0] ioctl_index,
 	input  logic [24:0] ioctl_addr,
@@ -48,6 +50,9 @@ module tecfri_core #(
 	output logic [8:0]  pix_y,
 	output logic        rom_ready,   // a complete ROM download has been received
 	output logic signed [15:0] audio,   // mono mix, signed; muted while paused
+	output logic [7:0]  nv_data,        // NVRAM upload data (ioctl_din)
+	output logic        nv_save_request,
+	output logic        nv_transfer,    // a save or restore is in progress
 
 	// Observation for tests
 	output logic signed [15:0] dbg_ym,
@@ -92,7 +97,8 @@ module tecfri_core #(
 	logic [3:0] phase = 4'd0;
 	always_ff @(posedge clk) phase <= phase + 4'd1;
 	wire pix_cen = (phase == 4'd0);
-	wire cpu_cen = pix_cen && !pause;
+	wire sys_pause = pause || nv_transfer;                // CPUs and sound freeze during an NVRAM transfer
+	wire cpu_cen = pix_cen && !sys_pause;
 	assign ce_pix = pix_cen;
 
 	// ------------------------------------------------------------ ROM storage (M10K)
@@ -131,6 +137,21 @@ module tecfri_core #(
 	tecfri_timing timing (.clk(clk), .reset_n(por_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt),
 		.hblank(hb_unused), .vblank(vb_unused), .vblank_start(vblank_start));
 
+	logic        nv_armed = 1'b0;                          // set at the first interrupt after reset
+	always_ff @(posedge clk) begin
+		if (!machine_reset_n) nv_armed <= 1'b0;
+		else if (dbg_int_ack) nv_armed <= 1'b1;
+	end
+	logic        wram_wr;
+	logic [10:0] wram_a;
+	logic [7:0]  wram_d, wram_q;
+	tecfri_nvram nvram (
+		.clk(clk),
+		.cpu_addr(wram_a), .cpu_data(wram_d), .cpu_wr(wram_wr), .cpu_q(wram_q),
+		.download(ioctl_download), .upload(ioctl_upload), .wr(ioctl_wr), .rd(ioctl_rd), .arm(nv_armed),
+		.index(ioctl_index), .addr(ioctl_addr), .data(ioctl_data),
+		.q(nv_data), .active(nv_transfer), .save_request(nv_save_request));
+
 	logic [9:0] vid_bg_a, vid_fg_a, vid_spr_a;
 	logic [7:0] vid_bgv_d, vid_bgc_d, vid_fgv_d, vid_fgc_d, vid_spr_d;
 	logic       flip;
@@ -143,6 +164,7 @@ module tecfri_core #(
 		.clk(clk), .reset_n(machine_reset_n), .cen_cpu(cpu_cen), .tricky(tricky), .vblank_start(vblank_start),
 		.dsw1(dsw1), .dsw2(dsw2), .p1(p1), .p2(p2),
 		.rom_addr(rom_addr), .rom_data(rom_data),
+		.wram_wr(wram_wr), .wram_a(wram_a), .wram_d(wram_d), .wram_q(wram_q),
 		.vid_bg_a(vid_bg_a), .vid_fg_a(vid_fg_a), .vid_spr_a(vid_spr_a),
 		.vid_bgv_d(vid_bgv_d), .vid_bgc_d(vid_bgc_d), .vid_fgv_d(vid_fgv_d), .vid_fgc_d(vid_fgc_d), .vid_spr_d(vid_spr_d),
 		.flip(flip), .palette_bank(palette_bank), .scroll_bg(scroll_bg), .scroll_fg(scroll_fg),
@@ -164,7 +186,7 @@ module tecfri_core #(
 
 	// ------------------------------------------------------------ sound
 	tecfri_audio audio_sys (
-		.clk(clk), .reset_n(machine_reset_n), .pause(pause), .tricky(tricky),
+		.clk(clk), .reset_n(machine_reset_n), .pause(sys_pause), .tricky(tricky),
 		.rom_we(we_audio), .rom_wa(a[14:0]), .rom_wd(ioctl_data),
 		.snd_cmd_wr(snd_cmd_wr), .snd_cmd(snd_cmd),
 		.main_ym_wr(ym_wr), .main_ym_a0(ym_a0), .main_ym_d(ym_d),

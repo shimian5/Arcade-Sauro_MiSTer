@@ -7,6 +7,8 @@
 //   +OUT=<prefix> output prefix (files <prefix>_<n>.hex)
 //   +WAV             write the mixed audio as 16-bit mono raw PCM at ~48 kHz to <prefix>.raw (tools/raw2wav.py)
 //                    and the sound-chip write log to <prefix>_audio.log
+//   +NVIMAGE=<hex>   restore this 2048-byte battery RAM image (index 4) after the ROM download
+//   +NVSAVE=<n>      at the nth acknowledge run an upload (save) and write <prefix>_nvsave.hex
 //   +PAUSE_AT=<n> +PAUSE_FRAMES=<m>  hold pause for m frame times after the nth acknowledge
 `timescale 1ps/1ps
 module tb_core;
@@ -20,6 +22,9 @@ module tb_core;
 	reg [24:0] ioctl_addr = 25'd0;
 	reg [7:0]  ioctl_data = 8'd0;
 
+	reg        ioctl_upload = 1'b0, ioctl_rd = 1'b0;
+	wire [7:0] nv_data;
+	wire       nv_save_request, nv_transfer;
 	wire signed [15:0] audio, dbg_ym, dbg_speech;
 	wire        dbg_ym_wr, dbg_ym_a0, dbg_ald_wr, dbg_cmd_rd;
 	wire [7:0]  dbg_ym_d, dbg_ald_d;
@@ -30,18 +35,23 @@ module tb_core;
 
 	tecfri_core core (
 		.clk(clk), .reset(reset), .pause(pause),
-		.ioctl_download(ioctl_download), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
+		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),
 		.ce_pix(ce_pix), .vid_r(vid_r), .vid_g(vid_g), .vid_b(vid_b),
 		.hblank(hblank), .vblank(vblank), .hsync(hsync), .vsync(vsync),
-		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready), .audio(audio),
+		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready), .audio(audio), .nv_data(nv_data), .nv_save_request(nv_save_request), .nv_transfer(nv_transfer),
 		.dbg_ym(dbg_ym), .dbg_speech(dbg_speech), .dbg_ym_wr(dbg_ym_wr), .dbg_ym_a0(dbg_ym_a0), .dbg_ym_d(dbg_ym_d),
 		.dbg_ald_wr(dbg_ald_wr), .dbg_ald_d(dbg_ald_d), .dbg_cmd_rd(dbg_cmd_rd),
 		.dbg_int_ack(dbg_int_ack), .dbg_bus_wr(dbg_bus_wr), .dbg_bus_io(dbg_bus_io),
 		.dbg_bus_a(dbg_bus_a), .dbg_bus_d(dbg_bus_d));
 
 	reg [7:0]  image [0:'h593FF];
+	reg [7:0]  nvimg [0:2047];
+	reg        nv_restore = 1'b0;
+	integer    nvsave_at = 0, hs_writes = 0, bus_writes_during_save = 0, nv_req_seen = 0;
+	reg        nv_saving = 1'b0;
+	reg [1023:0] nvname;
 	reg [23:0] cur  [0:240*224-1];
 	reg [23:0] snap [0:240*224-1];
 	integer want [0:7];
@@ -93,6 +103,16 @@ module tb_core;
 		if ((audio < 0 ? -audio : audio) > mix_peak) mix_peak = (audio < 0 ? -audio : audio);
 	end
 
+	// hi-score bytes (E057-E059): the game writes its default here only when it rejects the battery RAM image
+	always @(posedge clk) begin
+		if (dbg_bus_wr && !dbg_bus_io && dbg_bus_a >= 16'hE057 && dbg_bus_a <= 16'hE059) begin
+			hs_writes = hs_writes + 1;
+			if (log_f != 0) $fwrite(log_f, "%0t HISCORE write %04x=%02x\n", $time, dbg_bus_a, dbg_bus_d);
+		end
+		if (nv_saving && dbg_bus_wr) bus_writes_during_save = bus_writes_during_save + 1;
+		if (nv_save_request) nv_req_seen = nv_req_seen + 1;
+	end
+
 	reg vb_q = 1'b0;
 	always @(posedge clk) begin
 		vb_q <= vblank;
@@ -112,7 +132,7 @@ module tb_core;
 			// Machine state at the same instant: E000-FFFF as the CPU sees it, then latch and scrolls
 			$sformat(fname, "%0s_%0d_ram.hex", outname, acks);
 			fo = $fopen(fname, "w");
-			for (k = 0; k < 2048; k = k + 1) $fwrite(fo, "%02x\n", core.main.wram[k]);
+			for (k = 0; k < 2048; k = k + 1) $fwrite(fo, "%02x\n", core.nvram.mem[k]);
 			for (k = 0; k < 1024; k = k + 1) $fwrite(fo, "%02x\n", core.main.spr[k]);
 			for (k = 0; k < 1024; k = k + 1) $fwrite(fo, "%02x\n", core.main.bgv[k]);
 			for (k = 0; k < 1024; k = k + 1) $fwrite(fo, "%02x\n", core.main.bgc[k]);
@@ -124,6 +144,7 @@ module tb_core;
 		end
 		if (acks > maxwant) begin
 			$display("done after %0d interrupt acknowledges (%0d after resume)", acks, after_acks);
+			$display("hi-score writes (E057-E059) by the CPU: %0d; NVRAM save requests seen: %0d cycles", hs_writes, nv_req_seen);
 			$display("audio: %0d YM writes, %0d speech writes, %0d sound-command reads, %0d PCM samples, peaks ym=%0d speech=%0d mix=%0d",
 				ym_writes, ald_writes, cmd_reads, wav_n, ym_peak, sp_peak, mix_peak);
 			if (wav_f != 0) $fclose(wav_f);
@@ -131,6 +152,29 @@ module tb_core;
 			$finish;
 		end
 	end
+
+	task do_upload;
+		integer n;
+		reg [7:0] img [0:2047];
+	begin
+		nv_saving = 1'b1;
+		@(posedge clk); ioctl_index <= 16'd4; ioctl_upload <= 1'b1; ioctl_addr <= 25'd0; ioctl_rd <= 1'b1;
+		@(posedge clk); ioctl_rd <= 1'b0;
+		for (n = 0; n < 2048; n = n + 1) begin
+			@(posedge clk); @(posedge clk);
+			img[n] = nv_data;
+			ioctl_addr <= n + 1; ioctl_rd <= 1'b1;
+			@(posedge clk); ioctl_rd <= 1'b0;
+		end
+		@(posedge clk); ioctl_upload <= 1'b0; repeat (4) @(posedge clk);
+		nv_saving = 1'b0;
+		$sformat(nvname, "%0s_nvsave.hex", outname);
+		fo = $fopen(nvname, "w");
+		for (n = 0; n < 2048; n = n + 1) $fwrite(fo, "%02x\n", img[n]);
+		$fclose(fo);
+		$display("NVRAM upload written (CPU bus writes during the transfer: %0d)", bus_writes_during_save);
+	end
+	endtask
 
 	task send(input [15:0] idx, input [24:0] addr, input [7:0] data);
 	begin
@@ -144,6 +188,8 @@ module tb_core;
 		if (!$value$plusargs("IMAGE=%s", imgname)) $fatal(1, "need +IMAGE=");
 		if (!$value$plusargs("OUT=%s", outname)) outname = "core";
 		tricky_arg = $test$plusargs("TRICKY");
+		if ($value$plusargs("NVIMAGE=%s", nvname)) begin nv_restore = 1'b1; $readmemh(nvname, nvimg); end
+		if ($value$plusargs("NVSAVE=%d", nvsave_at)) ;
 		if ($test$plusargs("WAV")) begin
 			$sformat(fname, "%0s.raw", outname);       wav_f = $fopen(fname, "wb");
 			$sformat(fname, "%0s_audio.log", outname); log_f = $fopen(fname, "w");
@@ -160,6 +206,7 @@ module tb_core;
 		ioctl_download <= 1'b1;
 		send(16'd1, 25'd0, {7'd0, tricky_arg});
 		for (i = 0; i <= 'h593FF; i = i + 1) send(16'd0, i, image[i]);
+		if (nv_restore) for (i = 0; i < 2048; i = i + 1) send(16'd4, i, nvimg[i]);   // battery RAM restore, after the ROM
 		@(posedge clk); ioctl_download <= 1'b0;
 		repeat (20) @(posedge clk);
 		reset <= 1'b0;
@@ -167,6 +214,14 @@ module tb_core;
 	end
 
 	// Progress line every 100 ms of machine time (keeps long runs visibly alive on the host side).
+	initial begin
+		#1;
+		if (nvsave_at != 0) begin
+			wait (acks >= nvsave_at);
+			do_upload;
+		end
+	end
+
 	initial forever begin
 		#100000000000;
 		$display("progress t=%0t ps, %0d interrupt acknowledges", $time, acks);

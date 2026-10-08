@@ -81,7 +81,9 @@ wire  [1:0] buttons;
 wire [127:0] status;
 wire [21:0] gamma_bus;
 wire [31:0] joystick_0, joystick_1;
-wire        ioctl_download, ioctl_wr;
+wire        ioctl_download, ioctl_wr, ioctl_upload, ioctl_rd;
+wire        nv_save_request, nv_transfer;
+wire  [7:0] nv_data;
 wire [15:0] ioctl_index;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
@@ -106,7 +108,14 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
-	.ioctl_index(ioctl_index)
+	.ioctl_index(ioctl_index),
+
+	// battery RAM save/restore: standard upload request, image index 4 (see rtl/tecfri_nvram.sv)
+	.ioctl_upload(ioctl_upload),
+	.ioctl_rd(ioctl_rd),
+	.ioctl_din(nv_data),
+	.ioctl_upload_req(nv_save_request),
+	.ioctl_upload_index(8'd4)
 );
 
 ///////////////////////   CLOCKS   ///////////////////////////////
@@ -162,6 +171,8 @@ tecfri_core core
 	.pause(pause_cpu),
 
 	.ioctl_download(ioctl_download),
+	.ioctl_upload(ioctl_upload),
+	.ioctl_rd(ioctl_rd),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_index(ioctl_index),
 	.ioctl_addr(ioctl_addr),
@@ -184,6 +195,9 @@ tecfri_core core
 	.pix_y(),
 	.rom_ready(),
 	.audio(core_audio),
+	.nv_data(nv_data),
+	.nv_save_request(nv_save_request),
+	.nv_transfer(nv_transfer),
 
 	.dbg_ym(), .dbg_speech(), .dbg_ym_wr(), .dbg_ym_a0(), .dbg_ym_d(),
 	.dbg_ald_wr(), .dbg_ald_d(), .dbg_cmd_rd(),
