@@ -13,7 +13,7 @@ J=../rtl/sound/imports/jtopl/hdl
 JT="$J/jtopl2.v $(ls $J/jtopl_*.v) $J/jtopl.v"
 S=../rtl/sound/imports/Speech256/verilog/controller
 verilator --binary --timing -O3 -CFLAGS "-O3 -march=native" -j 8 --top-module tb_core -Wno-fatal \
-	+define+TV80_REFRESH --Mdir "$W/obj" tb_core.sv ../rtl/tecfri_core.sv ../rtl/tecfri_rom.sv \
+	+define+TV80_REFRESH --Mdir "$W/obj" tb_core.sv ../rtl/tecfri_core.sv ../rtl/tecfri_rom.sv ../rtl/tecfri_nvram.sv \
 	../rtl/tecfri_main.sv ../rtl/tecfri_timing.sv ../rtl/tecfri_video.sv ../rtl/tecfri_audio.sv \
 	../rtl/tecfri_speech.sv ../rtl/cpu_z80.v \
 	../rtl/tv80/rtl/core/tv80_core.v ../rtl/tv80/rtl/core/tv80_alu.v \

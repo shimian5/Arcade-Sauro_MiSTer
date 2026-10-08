@@ -17,6 +17,7 @@ module tecfri_audio (
 	input  logic               tricky,
 	input  logic               speech_mute,    // diagnostic: drop the SP0256 voice from the mix
 	input  logic               tone_en,        // diagnostic: replace the mix with a 440 Hz square wave
+	input  logic [2:0]         dbg_sel,        // diagnostic: tone plays only once the selected event has happened since reset
 
 	// ROM download (audio CPU program)
 	input  logic               rom_we,
@@ -154,6 +155,40 @@ module tecfri_audio (
 	assign nmi_n      = lrq_n;
 	assign speech_out = sp_sample;
 
+	// ------------------------------------------------------------ diagnostic event flags (sticky, cleared by machine reset)
+	// Selected by dbg_sel; the mix is replaced by the test tone while the chosen flag is set, so the OSD user can hear
+	// which step of the Sauro sound chain happened: 1 ROM downloaded, 2 sound CPU ran code past 0100, 3 sound CPU wrote the YM3812,
+	// 4 YM3812 IRQ went low, 5 sound CPU read the command latch, 6 main CPU sent a sound command, 7 YM3812 output became audible.
+	logic [15:0] rom_cnt = 16'd0;
+	always_ff @(posedge clk) if (rom_we && rom_cnt != 16'hFFFF) rom_cnt <= rom_cnt + 16'd1;
+	logic f_alive, f_ymw, f_irq, f_cmdrd, f_cmdsent, f_audible;
+	wire signed [15:0] ym_abs = ym_snd[15] ? -ym_snd : ym_snd;
+	always_ff @(posedge clk) begin
+		if (!reset_n) begin
+			f_alive <= 1'b0; f_ymw <= 1'b0; f_irq <= 1'b0; f_cmdrd <= 1'b0; f_cmdsent <= 1'b0; f_audible <= 1'b0;
+		end else begin
+			if (!m1_n && !mreq_n && a >= 16'h0100 && a < 16'h8000) f_alive <= 1'b1;
+			if (ym_wr)           f_ymw <= 1'b1;
+			if (!ym_irq_n)       f_irq <= 1'b1;
+			if (cmd_rd)          f_cmdrd <= 1'b1;
+			if (snd_cmd_wr)      f_cmdsent <= 1'b1;
+			if (ym_abs >= 16'sd32) f_audible <= 1'b1;
+		end
+	end
+	logic dbg_flag;
+	always_comb begin
+		case (dbg_sel)
+			3'd1:    dbg_flag = (rom_cnt >= 16'd32768);
+			3'd2:    dbg_flag = f_alive;
+			3'd3:    dbg_flag = f_ymw;
+			3'd4:    dbg_flag = f_irq;
+			3'd5:    dbg_flag = f_cmdrd;
+			3'd6:    dbg_flag = f_cmdsent;
+			3'd7:    dbg_flag = f_audible;
+			default: dbg_flag = 1'b0;
+		endcase
+	end
+
 	// ------------------------------------------------------------ mix
 	// MAME routes both chips to one mono speaker at gain 1.0. Levels are calibrated against MAME captures
 	// of the same machine time (docs/AUDIO.md): the YM3812 from jtopl measured 0.90 of MAME's RMS, so it is
@@ -171,7 +206,7 @@ module tecfri_audio (
 	end
 
 	always_ff @(posedge clk) begin
-		if (tone_en) mix_out <= tone_hi ? 16'sd8000 : -16'sd8000;
+		if (tone_en || dbg_flag) mix_out <= tone_hi ? 16'sd8000 : -16'sd8000;
 		else if (pause) mix_out <= 16'sd0;
 		else if (sum > 18'sd32767)  mix_out <= 16'sd32767;
 		else if (sum < -18'sd32768) mix_out <= -16'sd32768;

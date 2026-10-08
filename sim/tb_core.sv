@@ -34,7 +34,7 @@ module tb_core;
 	wire [15:0] dbg_bus_a;
 
 	tecfri_core core (
-		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0),
+		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(3'd0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),
@@ -144,6 +144,8 @@ module tb_core;
 		end
 		if (acks > maxwant) begin
 			$display("done after %0d interrupt acknowledges (%0d after resume)", acks, after_acks);
+			$display("sound flags: rom_bytes=%0d alive=%b ym_written=%b ym_irq=%b cmd_read=%b cmd_sent=%b ym_audible=%b",
+				core.audio_sys.rom_cnt, core.audio_sys.f_alive, core.audio_sys.f_ymw, core.audio_sys.f_irq, core.audio_sys.f_cmdrd, core.audio_sys.f_cmdsent, core.audio_sys.f_audible);
 			$display("hi-score writes (E057-E059) by the CPU: %0d; NVRAM save requests seen: %0d cycles", hs_writes, nv_req_seen);
 			$display("audio: %0d YM writes, %0d speech writes, %0d sound-command reads, %0d PCM samples, peaks ym=%0d speech=%0d mix=%0d",
 				ym_writes, ald_writes, cmd_reads, wav_n, ym_peak, sp_peak, mix_peak);
