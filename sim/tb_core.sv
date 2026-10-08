@@ -33,11 +33,63 @@ module tb_core;
 	wire [8:0]  pix_x, pix_y;
 	wire [15:0] dbg_bus_a;
 
+	// +COIN_AT=<ms>: hold coin 1 (p1 bit 2) for 100 ms starting at that machine time
+	reg [7:0] p1_in = 8'h00;
+	integer coin_at_ms;
+	initial if ($value$plusargs("COIN_AT=%d", coin_at_ms)) begin
+		#(coin_at_ms * 64'd1000000000); p1_in[2] = 1'b1; #(64'd100000000000); p1_in[2] = 1'b0;
+	end
+
+	// +START_AT=<ms>: hold start 1 (p2 bit 2) for 100 ms
+	reg [7:0] p2_in = 8'h00;
+	integer start_at_ms;
+	initial if ($value$plusargs("START_AT=%d", start_at_ms)) begin
+		#(start_at_ms * 64'd1000000000); p2_in[2] = 1'b1; #(64'd100000000000); p2_in[2] = 1'b0;
+	end
+
+	// +PLAY: the scripted input of sim/mame/dump_frame.lua PLAY=1 (coin at frame 400, start at 450, then pseudo-random
+	// stick and buttons every 20 frames from 520), frame = interrupt acknowledge count, to follow MAME's gameplay.
+	integer play_rng = 12345, play_held = 0;
+	wire play_on = $test$plusargs("PLAY");
+	always @(posedge clk) if (dbg_int_ack && play_on) begin : playblk
+		reg [7:0] pa; integer fr;
+		fr = acks + 1;
+		if (fr >= 520 && fr % 20 == 0) begin play_rng = (play_rng * 1103515245 + 12345) & 32'h7fffffff; play_held = (play_rng >> 8) & 255; end
+		pa = (fr >= 520) ? (play_held & 8'hF3) : 8'h00;
+		pa[2] = (fr >= 400 && fr < 410);
+		p1_in = pa;
+		p2_in = (fr >= 450 && fr < 460) ? 8'h04 : 8'h00;
+	end
+
+	// speech handshake trace (LRQ to the audio CPU's NMI, and the audio CPU entering the NMI vector)
+	reg lrq_prev = 1'b1, nmi_ent_q = 1'b0;
+	always @(posedge clk) begin
+		lrq_prev <= core.audio_sys.lrq_n;
+		if (log_f != 0 && core.audio_sys.lrq_n != lrq_prev) $fwrite(log_f, "%0t LRQ %b\n", $time, core.audio_sys.lrq_n);
+		if (log_f != 0 && core.audio_sys.m1_n == 1'b0 && core.audio_sys.mreq_n == 1'b0 && core.audio_sys.a == 16'h0066) $fwrite(log_f, "%0t NMIFETCH\n", $time);
+	end
+
+	// speech sample trace (loud samples only, first 40) with the synthesiser's period/duration/amplitude
+	integer sps_n = 0; reg signed [15:0] sps_last = 16'sd0;
+	always @(posedge clk) if (log_f != 0 && core.audio_sys.speech.ce && core.audio_sys.speech.sample_stb && sps_n < 120 && $time > 64'd18285897000000 &&
+		(core.audio_sys.speech.s_out !== sps_last)) begin
+		sps_last = core.audio_sys.speech.s_out;
+		sps_n = sps_n + 1;
+		$fwrite(log_f, "%0t SPS %0d period=%0d dur=%0d amp=%0d\n", $time, $signed(core.audio_sys.speech.s_out), core.audio_sys.speech.speech.period, core.audio_sys.speech.speech.dur, core.audio_sys.speech.speech.amp);
+	end
+
+	// synthesiser coefficient loads after the game-over allophone write
+	integer cf_n = 0;
+	always @(posedge clk) if (log_f != 0 && $time > 64'd18285897000000 && core.audio_sys.speech.ce && core.audio_sys.speech.speech.coef_load && cf_n < 60) begin
+		cf_n = cf_n + 1;
+		$fwrite(log_f, "%0t COEF %0d\n", $time, $signed(core.audio_sys.speech.speech.coef_bus));
+	end
+
 	tecfri_core core (
 		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(4'd0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
-		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),
+		.dsw1(8'h66), .dsw2(8'h2f), .p1(p1_in), .p2(p2_in),
 		.ce_pix(ce_pix), .vid_r(vid_r), .vid_g(vid_g), .vid_b(vid_b),
 		.hblank(hblank), .vblank(vblank), .hsync(hsync), .vsync(vsync),
 		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready), .audio(audio), .nv_data(nv_data), .nv_save_request(nv_save_request), .nv_transfer(nv_transfer),

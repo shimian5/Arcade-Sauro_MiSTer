@@ -14,7 +14,8 @@
 // LRQ: the chip asserts LRQ (active low) when it can take a new allophone; the board wires it to the audio
 // CPU's NMI. lrq_n is the inverse of Speech256's ldq. ALD writes are held until an enabled clock samples them.
 module tecfri_speech #(
-	parameter [31:0] NCO_INC = 32'd176203787      // round(4e6 * 256 / 312 / 80e6 * 2^32)
+	parameter [31:0] NCO_INC = 32'd176203787,     // round(4e6 * 256 / 312 / 80e6 * 2^32)
+	parameter int    BUSY_CYCLES = 240_000         // minimum LRQ-high time after a write: 3 ms at 80 MHz
 )(
 	input  logic               clk,
 	input  logic               reset_n,
@@ -56,7 +57,18 @@ module tecfri_speech #(
 		.pwm_out(), .sample_out(s_out), .sample_stb(sample_stb)
 	);
 
-	assign lrq_n = !ldq;
+	// LRQ stays high (busy) for at least BUSY_CYCLES after an ALD write. Speech256 can take an allophone and ask for the
+	// next within microseconds, so the audio CPU's NMI would arrive while the sound routine that queues the rest of the
+	// phrase is still running, find the queue empty, and no later LRQ edge would ever fetch the remainder (the chip then
+	// sat on one noise allophone). MAME's SP0256 lets 3-5 ms pass between the first two writes of a phrase
+	// (writes at 16.684 s and 16.687 s for the game-over phrase); the real chip's figure is unmeasured.
+	logic [18:0] busy_cnt = 19'd0;
+	always_ff @(posedge clk or negedge reset_n) begin
+		if (!reset_n)                    busy_cnt <= 19'd0;
+		else if (ald_wr)                 busy_cnt <= BUSY_CYCLES[18:0];
+		else if (busy_cnt != 19'd0 && !hold) busy_cnt <= busy_cnt - 19'd1;
+	end
+	assign lrq_n = !ldq || (busy_cnt != 19'd0);
 
 	always_ff @(posedge clk) if (ce && sample_stb) sample <= s_out;
 
