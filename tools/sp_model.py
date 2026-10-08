@@ -8,7 +8,7 @@ Usage: python -I sp_model.py al2rom.hex [variant] [allophones...]
 """
 import re, sys, pathlib
 
-SRC = pathlib.Path(__file__).resolve().parents[2] / "docs" / "reference" / "mame" / "sp0256.cpp"
+SRC = pathlib.Path(__file__).resolve().parents[1] / "docs" / "reference" / "mame" / "sp0256.cpp"
 txt = SRC.read_text()
 SYM = dict(AM=0, PR=1, B0=2, F0=3, B1=4, F1=5, B2=6, F2=7, B3=8, F3=9, B4=10, F4=11, B5=12, F5=13, IA=14, IP=15)
 body = txt[txt.index("sp0256_datafmt[] ="):txt.index("sp0256_df_idx")]
