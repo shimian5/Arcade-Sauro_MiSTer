@@ -48,3 +48,12 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Pending remedy: fitter seed sweep (tools/seed_sweep.ps1 -Seeds 2,3,4 in scratch copies, started, result in simulation/seed_sweep.log); adopt a
   seed with positive slack in Arcade-Tecfri.qsf, then rebuild officially and re-record. `tools/report_hdmi_paths.tcl` lists the failing paths.
 - The last hardware-tested RBF remains aeb5f0d2 (sound, no NVRAM).
+
+## RBF 1d3eed9e1e8af5941859322233d457b8 (releases/Tecfri_20261007b_diag.rbf, 3,601,736 bytes): diagnostic build
+- Source revision `9452dfb` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-07 20:28.
+- Adds battery RAM save/restore (rtl/tecfri_nvram.sv, MRA `<nvram index="4">`), and two diagnostic OSD switches for the silent Sauro/Sea Wolf
+  sound report: "Speech (Sauro)" On/Off (drops the voice from the mix) and "Sound test tone" (440 Hz square through the output path).
+- Fit: 11,292 / 41,910 ALMs (27 %); 454 / 553 RAM blocks (82 %); 35 DSP blocks. Timing: no negative slack; worst setup +0.749 ns (HDMI scaler
+  clock), worst hold +0.248 ns. The earlier default-seed NVRAM build (0e426e13) missed by -0.119 ns on the framework's ascal paths.
+- Owner report on RBF aeb5f0d2: Tricky Doc has sound; Sauro and Sea Wolf make no sound at all. Cause not yet found; simulation with zero-initialised
+  state plays them correctly. NOT yet tested on hardware: this build.
