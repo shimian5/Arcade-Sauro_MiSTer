@@ -47,3 +47,26 @@ Listening copies: simulation/audio/rtl_sauro_boot_9s.wav and mame_sauro_boot_8s.
 - Decision: keep Speech256 for now, speech accuracy is UNVERIFIED pending a recording of a real Sauro board.
 - When phrases play (MAME with scripted input): phrase B (1B 07 2D 20 00) right after the game starts; phrases A and C recur
   during play every few seconds. What each says has not been identified.
+
+## ivoice.vhd read-through (static, against MAME's sp0256.cpp model; nothing here is confirmed by a hardware recording)
+1. `repeat` is decremented in the per-output-sample branch of the state machine (ivoice.vhd lines 1065-1068). MAME decrements its
+   repeat count once per pitch period (lpc12_update, rpt-- at each impulse, and per noise period). Not resolved whether ivoice
+   compensates elsewhere; the measured allophone-length differences (0.98-1.96x) are consistent with a model difference like this.
+2. Pitch/amplitude interpolation (registers IP, IA) is added in sGENE2/sGENE4 on every sample; MAME adds r[14], r[15] only at the start
+   of each pitch period (do_int).
+3. Impulse spacing: ivoice reloads its counter with PR-1 and fires at zero, so the period is PR samples; MAME's counter gives PR+1.
+4. Output scaling: ivoice latches sat(samp/4)*256, MAME uses limit(samp >> 4) << 8. ivoice is 4x louder than MAME (the
+   maintainer's 2026-09-28 "x4 voice amplitude" change), which is why it clips; both quantise to 8 bits.
+5. The sound latch happens at divcpt = 320 inside the sample period, so the design needs divi >= about 321 phi ticks per sample. At
+   Sauro's rate this is met by running phi at 4.59 MHz with divi = 358 (same 12.82 kHz sample rate).
+
+## SP0256 versions
+- Sauro's chip is an SP0256-AL2 (board photo); MAME's ROM dump sp0256-al2.bin (CRC b504ac15) is also used, undumped, for seawolft.
+- No source found documents any difference between "SP0256-AL2" and "SP0256A-AL2" ROM contents; the Wikipedia article says versions
+  differ in the voice data in the mask ROM (AL2 = allophone set, -012 = Intellivoice phrases). A chip-version difference therefore
+  cannot explain differences between candidate implementations: all of them are meant to play the same AL2 data.
+- Clock is the variable that matters for pace and pitch: the SP0256 is usually driven at 3.12 MHz (10 kHz sample rate, Amstrad SSA-1) but
+  some boards use 4 MHz (dk'tronics). MAME has Sauro at 4 MHz (12.82 kHz), which makes speech about 28 % faster and higher than at 3.12 MHz.
+- Inference to check on hardware: the second crystal on the Sauro board is marked 8.xxx and sits near the audio section; 8 MHz / 2 = 4 MHz
+  would feed the sound CPU, YM3812 and SP0256 (MAME's 20 MHz / 5 gives the same 4 MHz). Tricky Doc has only the 20 MHz crystal, matching
+  MAME's 2.5 MHz (20 / 8) YM3812 there. Numerically nothing changes in this core.
