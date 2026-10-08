@@ -57,3 +57,12 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   clock), worst hold +0.248 ns. The earlier default-seed NVRAM build (0e426e13) missed by -0.119 ns on the framework's ascal paths.
 - Owner report on RBF aeb5f0d2: Tricky Doc has sound; Sauro and Sea Wolf make no sound at all. Cause not yet found; simulation with zero-initialised
   state plays them correctly. NOT yet tested on hardware: this build.
+
+## RBF 6c3827f33052d4d94c35b136e05b6ef6 (releases/Tecfri_20261008_debugtone.rbf, 3,617,128 bytes): debug-tone diagnostic build
+- Source revision `f17e0f9` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:03.
+- Adds the OSD "Debug tone" selector: a tone plays once the chosen event has happened since reset (ROM loaded, sound CPU running past 0100,
+  YM3812 written, YM3812 IRQ low, command latch read, main CPU sent a sound command, YM3812 output audible). In simulation (Sauro, zero-initialised
+  state, 2 s) flags 1-5 are set; "cmd sent" needs a coin and "YM audible" the music at about 5 s.
+- Fit: 11,338 / 41,910 ALMs (27 %), 454 / 553 RAM blocks (82 %), 35 DSP. Timing: no negative slack; worst setup +0.244 ns (framework HDMI clock), worst hold +0.253 ns.
+- Owner result on the previous diagnostic build (1d3eed9e): the 440 Hz test tone is audible, and Sauro stays silent with speech on or off, so the output path
+  and the speech block are not the cause; Tricky Doc (YM3812 driven by the main CPU) has sound. Not yet tested on hardware: this build.
