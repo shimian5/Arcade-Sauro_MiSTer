@@ -153,10 +153,13 @@ module tecfri_audio (
 	assign speech_out = sp_sample;
 
 	// ------------------------------------------------------------ mix
-	// MAME routes both chips to one mono speaker at gain 1.0. The speech gain below is a placeholder that
-	// is calibrated against MAME audio (docs/AUDIO.md); the DAC and amplifier of the real board are unknown.
-	localparam int SPEECH_GAIN_SHIFT = 3;
-	wire signed [17:0] sum = $signed({{2{ym_snd[15]}}, ym_snd}) + ($signed({{2{sp_sample[15]}}, sp_sample}) <<< SPEECH_GAIN_SHIFT);
+	// MAME routes both chips to one mono speaker at gain 1.0. Levels are calibrated against MAME captures
+	// of the same machine time (docs/AUDIO.md): the YM3812 from jtopl measured 0.90 of MAME's RMS, so it is
+	// scaled by 1 + 1/8; the Speech256 sample peaks near 640 where MAME's SP0256 reaches 6300-8100, so it is
+	// scaled by 11. MAME is the only reference available; the real board's DAC and amplifier are unknown.
+	wire signed [17:0] ym18  = $signed({{2{ym_snd[15]}}, ym_snd});
+	wire signed [17:0] sp18  = $signed({{2{sp_sample[15]}}, sp_sample});
+	wire signed [17:0] sum   = ym18 + (ym18 >>> 3) + (sp18 <<< 3) + (sp18 <<< 1) + sp18;
 	always_ff @(posedge clk) begin
 		if (pause) mix_out <= 16'sd0;
 		else if (sum > 18'sd32767)  mix_out <= 16'sd32767;
