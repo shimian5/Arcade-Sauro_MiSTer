@@ -27,3 +27,15 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   THIS core's output, not the original board, so it is not evidence for the unmeasured original timing.
 - Not yet checked on hardware: VGA/15 kHz RGB output, scandoubler/effects, pause button, DIP menu changes.
   No sound in this build.
+
+## RBF aeb5f0d20531530bfcc839f1376c8a29  (releases/Tecfri_20261007.rbf, 3,600,856 bytes): first build with sound
+- Source revision: `0eba59a` (tracked tree clean; untracked WIP files rtl/tecfri_nvram.sv, sim/tb_nvram.sv are not in files.qip).
+- Tool: Quartus Prime 17.0.2 Build 602 Lite, `quartus_sh --flow compile Arcade-Tecfri` via `tools/build.ps1`, built 2026-10-07 18:08.
+- Contents: video and CPU as in RBF 60c2c1c3, plus the YM3812 (jtopl2), the Sauro-family sound CPU, and Speech256 (clock-enabled copy)
+  for the SP0256 voice. Mix levels calibrated against MAME captures (provisional). No NVRAM saving, no CRT controls yet.
+- Fit: 11,156 / 41,910 ALMs (27 %); block memory 3,507,966 bits (62 %), 452 / 553 RAM blocks (82 %); 35 DSP blocks (framework 33 plus
+  2 multipliers inside jtopl); 3 PLLs.
+- Timing (final models): setup slack positive on every clock: 80 MHz system clock 0.706 ns, HDMI PLL clock 0.436 ns (framework),
+  others above 3.8 ns; hold slack positive, worst 0.246 ns. One critical warning, the framework's "mode" port width message.
+- Simulation evidence for this source: 9 s of machine time from reset on `sauro`: music starts at 5.0 s as in MAME, level ratio 0.83-0.99;
+  speech not run through the full core yet (it is exercised standalone, docs/AUDIO.md). NOT yet tested on hardware.
