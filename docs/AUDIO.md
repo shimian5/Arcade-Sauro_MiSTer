@@ -23,3 +23,13 @@ times (tools/speech_timing.py):
 Neither reproduces MAME's timing. ivoice.vhd is much closer and uses the genuine ROM, but is not exact, and I have
 not established which side of the remaining difference is wrong. ivoice.vhd is vendored (rtl/sound/imports/intv_ivoice,
 GPL position per owner) for evaluation; the clock-enabled Speech256 copy is in rtl/sound/speech256_ce.
+
+## Music and full-core audio vs MAME (Sauro, 9 s of machine time from reset, unmodified ROMs)
+`tools/audio_compare.py` on the core's mixed output vs a MAME capture of the same period (MAME is silent until
+about 5 s, then the attract music starts): the core is also silent until 5.0 s and the music starts in the same
+window. Over the six music windows the RMS level ratio core/MAME is 0.83 to 0.99 (median 0.90, core slightly quieter)
+and the log-spectrum correlation is 0.67 to 0.80. 140,720 YM3812 writes, 4,458 sound-command reads (about 497 Hz).
+This shows the right music at about the right level; it is not a sample-accurate match, because jtopl and MAME's
+ymfm differ and the audio CPU interrupt is the YM3812 timer (about 496 Hz) rather than MAME's 480 Hz timer, which
+also makes the tempo about 3 % faster than MAME's. No speech occurs in this window (no coin inserted).
+Listening copies: simulation/audio/rtl_sauro_boot_9s.wav and mame_sauro_boot_8s.wav.
