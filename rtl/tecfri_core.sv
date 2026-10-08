@@ -24,6 +24,8 @@ module tecfri_core #(
 	input  logic        clk,
 	input  logic        reset,          // machine reset (user reset); video timing keeps running
 	input  logic        pause,          // freezes the CPUs, video continues
+	input  logic        speech_mute,    // diagnostic switches from the OSD
+	input  logic        tone_en,
 
 	input  logic        ioctl_download,
 	input  logic        ioctl_upload,      // NVRAM save stream (index 4)
@@ -186,7 +188,7 @@ module tecfri_core #(
 
 	// ------------------------------------------------------------ sound
 	tecfri_audio audio_sys (
-		.clk(clk), .reset_n(machine_reset_n), .pause(sys_pause), .tricky(tricky),
+		.clk(clk), .reset_n(machine_reset_n), .pause(sys_pause), .tricky(tricky), .speech_mute(speech_mute), .tone_en(tone_en),
 		.rom_we(we_audio), .rom_wa(a[14:0]), .rom_wd(ioctl_data),
 		.snd_cmd_wr(snd_cmd_wr), .snd_cmd(snd_cmd),
 		.main_ym_wr(ym_wr), .main_ym_a0(ym_a0), .main_ym_d(ym_d),

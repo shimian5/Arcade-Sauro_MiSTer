@@ -34,7 +34,7 @@ module tb_core;
 	wire [15:0] dbg_bus_a;
 
 	tecfri_core core (
-		.clk(clk), .reset(reset), .pause(pause),
+		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),

@@ -15,6 +15,8 @@ module tecfri_audio (
 	input  logic               reset_n,        // machine reset (active low)
 	input  logic               pause,          // freezes CPU and sound chips, output muted
 	input  logic               tricky,
+	input  logic               speech_mute,    // diagnostic: drop the SP0256 voice from the mix
+	input  logic               tone_en,        // diagnostic: replace the mix with a 440 Hz square wave
 
 	// ROM download (audio CPU program)
 	input  logic               rom_we,
@@ -158,10 +160,19 @@ module tecfri_audio (
 	// scaled by 1 + 1/8; the Speech256 sample peaks near 640 where MAME's SP0256 reaches 6300-8100, so it is
 	// scaled by 11. MAME is the only reference available; the real board's DAC and amplifier are unknown.
 	wire signed [17:0] ym18  = $signed({{2{ym_snd[15]}}, ym_snd});
-	wire signed [17:0] sp18  = $signed({{2{sp_sample[15]}}, sp_sample});
+	wire signed [17:0] sp18  = speech_mute ? 18'sd0 : $signed({{2{sp_sample[15]}}, sp_sample});
 	wire signed [17:0] sum   = ym18 + (ym18 >>> 3) + (sp18 <<< 3) + (sp18 <<< 1) + sp18;
+	// 440 Hz test tone: 80 MHz / 880 = 90,909 clocks per half period (diagnostic only)
+	logic [16:0] tone_cnt = 17'd0;
+	logic        tone_hi  = 1'b0;
 	always_ff @(posedge clk) begin
-		if (pause) mix_out <= 16'sd0;
+		if (tone_cnt == 17'd90908) begin tone_cnt <= 17'd0; tone_hi <= !tone_hi; end
+		else tone_cnt <= tone_cnt + 17'd1;
+	end
+
+	always_ff @(posedge clk) begin
+		if (tone_en) mix_out <= tone_hi ? 16'sd8000 : -16'sd8000;
+		else if (pause) mix_out <= 16'sd0;
 		else if (sum > 18'sd32767)  mix_out <= 16'sd32767;
 		else if (sum < -18'sd32768) mix_out <= -16'sd32768;
 		else mix_out <= sum[15:0];

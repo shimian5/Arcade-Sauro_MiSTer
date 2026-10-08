@@ -68,6 +68,9 @@ localparam CONF_STR = {
 	"O[4],Pause when OSD is open,On,Off;",
 	"O[5],Dim video after 10s,On,Off;",
 	"-;",
+	"O[6],Speech (Sauro),On,Off;",
+	"O[7],Sound test tone,Off,On;",
+	"-;",
 	"R[0],Reset and close OSD;",
 	// Button names map to joystick bits 4 and up; keep in step with the MRA button defaults.
 	"J1,Button 1,Button 2,Start 1P,Start 2P,Coin,Pause;",
@@ -169,6 +172,8 @@ tecfri_core core
 	.clk(clk_sys),
 	.reset(reset),
 	.pause(pause_cpu),
+	.speech_mute(status[6]),
+	.tone_en(status[7]),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_upload(ioctl_upload),
