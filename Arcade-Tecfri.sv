@@ -70,7 +70,7 @@ localparam CONF_STR = {
 	"-;",
 	"O[6],Speech (Sauro),On,Off;",
 	"O[7],Sound test tone,Off,On;",
-	"O[10:8],Debug tone,Off,ROM loaded,CPU running,YM written,YM IRQ,Cmd read,Cmd sent,YM audible;",
+	"O[11:8],Debug tone,Off,ROM loaded,CPU running,YM written,YM IRQ,Cmd read,Cmd sent,YM audible,Main loop,INT vector,NMI vector,Wild fetch,YM timer2 start;",
 	"-;",
 	"R[0],Reset and close OSD;",
 	// Button names map to joystick bits 4 and up; keep in step with the MRA button defaults.
@@ -175,7 +175,7 @@ tecfri_core core
 	.pause(pause_cpu),
 	.speech_mute(status[6]),
 	.tone_en(status[7]),
-	.dbg_sel(status[10:8]),
+	.dbg_sel(status[11:8]),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_upload(ioctl_upload),

@@ -26,7 +26,7 @@ module tecfri_core #(
 	input  logic        pause,          // freezes the CPUs, video continues
 	input  logic        speech_mute,    // diagnostic switches from the OSD
 	input  logic        tone_en,
-	input  logic [2:0]  dbg_sel,
+	input  logic [3:0]  dbg_sel,
 
 	input  logic        ioctl_download,
 	input  logic        ioctl_upload,      // NVRAM save stream (index 4)

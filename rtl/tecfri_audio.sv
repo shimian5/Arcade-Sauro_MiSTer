@@ -17,7 +17,7 @@ module tecfri_audio (
 	input  logic               tricky,
 	input  logic               speech_mute,    // diagnostic: drop the SP0256 voice from the mix
 	input  logic               tone_en,        // diagnostic: replace the mix with a 440 Hz square wave
-	input  logic [2:0]         dbg_sel,        // diagnostic: tone plays only once the selected event has happened since reset
+	input  logic [3:0]         dbg_sel,        // diagnostic: tone plays only once the selected event has happened since reset
 
 	// ROM download (audio CPU program)
 	input  logic               rom_we,
@@ -158,14 +158,17 @@ module tecfri_audio (
 	// ------------------------------------------------------------ diagnostic event flags (sticky, cleared by machine reset)
 	// Selected by dbg_sel; the mix is replaced by the test tone while the chosen flag is set, so the OSD user can hear
 	// which step of the Sauro sound chain happened: 1 ROM downloaded, 2 sound CPU ran code past 0100, 3 sound CPU wrote the YM3812,
-	// 4 YM3812 IRQ went low, 5 sound CPU read the command latch, 6 main CPU sent a sound command, 7 YM3812 output became audible.
+	// 4 YM3812 IRQ went low, 5 sound CPU read the command latch, 6 main CPU sent a sound command, 7 YM3812 output became audible,
+	// 8 main loop 0278 reached, 9 INT/RST38 vector entered, 10 NMI vector entered, 11 opcode fetched from 8000+ (wild), 12 YM timer 2 started.
 	logic [15:0] rom_cnt = 16'd0;
 	always_ff @(posedge clk) if (rom_we && rom_cnt != 16'hFFFF) rom_cnt <= rom_cnt + 16'd1;
-	logic f_alive, f_ymw, f_irq, f_cmdrd, f_cmdsent, f_audible;
+	logic f_alive, f_ymw, f_irq, f_cmdrd, f_cmdsent, f_audible, f_main, f_isr, f_nmi, f_wild, f_t2;
+	logic [7:0] ym_sel_reg;
 	wire signed [15:0] ym_abs = ym_snd[15] ? -ym_snd : ym_snd;
 	always_ff @(posedge clk) begin
 		if (!reset_n) begin
 			f_alive <= 1'b0; f_ymw <= 1'b0; f_irq <= 1'b0; f_cmdrd <= 1'b0; f_cmdsent <= 1'b0; f_audible <= 1'b0;
+			f_main <= 1'b0; f_isr <= 1'b0; f_nmi <= 1'b0; f_wild <= 1'b0; f_t2 <= 1'b0; ym_sel_reg <= 8'h00;
 		end else begin
 			if (!m1_n && !mreq_n && a >= 16'h0100 && a < 16'h8000) f_alive <= 1'b1;
 			if (ym_wr)           f_ymw <= 1'b1;
@@ -173,18 +176,29 @@ module tecfri_audio (
 			if (cmd_rd)          f_cmdrd <= 1'b1;
 			if (snd_cmd_wr)      f_cmdsent <= 1'b1;
 			if (ym_abs >= 16'sd32) f_audible <= 1'b1;
+			if (!m1_n && !mreq_n && a == 16'h0278) f_main <= 1'b1;                 // reached the sound firmware's main loop
+			if (!m1_n && !mreq_n && a == 16'h0038) f_isr  <= 1'b1;                 // entered the INT / RST 38 vector
+			if (!m1_n && !mreq_n && a == 16'h0066) f_nmi  <= 1'b1;                 // entered the NMI vector
+			if (!m1_n && !mreq_n && a >= 16'h8000) f_wild <= 1'b1;                 // fetched an opcode from RAM or unmapped space
+			if (ym_wr && !ym_a0) ym_sel_reg <= ym_d;
+			if (ym_wr && ym_a0 && ym_sel_reg == 8'h04 && ym_d[1] && !ym_d[7]) f_t2 <= 1'b1;   // timer 2 start written
 		end
 	end
 	logic dbg_flag;
 	always_comb begin
 		case (dbg_sel)
-			3'd1:    dbg_flag = (rom_cnt >= 16'd32768);
-			3'd2:    dbg_flag = f_alive;
-			3'd3:    dbg_flag = f_ymw;
-			3'd4:    dbg_flag = f_irq;
-			3'd5:    dbg_flag = f_cmdrd;
-			3'd6:    dbg_flag = f_cmdsent;
-			3'd7:    dbg_flag = f_audible;
+			4'd1:    dbg_flag = (rom_cnt >= 16'd32768);
+			4'd2:    dbg_flag = f_alive;
+			4'd3:    dbg_flag = f_ymw;
+			4'd4:    dbg_flag = f_irq;
+			4'd5:    dbg_flag = f_cmdrd;
+			4'd6:    dbg_flag = f_cmdsent;
+			4'd7:    dbg_flag = f_audible;
+			4'd8:    dbg_flag = f_main;
+			4'd9:    dbg_flag = f_isr;
+			4'd10:   dbg_flag = f_nmi;
+			4'd11:   dbg_flag = f_wild;
+			4'd12:   dbg_flag = f_t2;
 			default: dbg_flag = 1'b0;
 		endcase
 	end

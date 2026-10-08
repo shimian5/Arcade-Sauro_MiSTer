@@ -34,7 +34,7 @@ module tb_core;
 	wire [15:0] dbg_bus_a;
 
 	tecfri_core core (
-		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(3'd0),
+		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(4'd0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),
@@ -113,6 +113,25 @@ module tb_core;
 		if (nv_save_request) nv_req_seen = nv_req_seen + 1;
 	end
 
+	// Sound CPU boot probe: first NMI edge, and any writes to the top of the address space (stack before SP is set)
+	integer nmi_edges = 0, stack_wr_top = 0;
+	reg nmi_q = 1'b1;
+	time t_first_nmi = 0;
+	always @(posedge clk) begin
+		nmi_q <= core.audio_sys.nmi_n;
+		if (core.machine_reset_n && !core.audio_sys.nmi_n && nmi_q) begin
+			nmi_edges = nmi_edges + 1;
+			if (nmi_edges == 1) begin
+				t_first_nmi = $time;
+				$display("sound CPU: first NMI edge at %0t ps, audio address bus %04x", $time, core.audio_sys.a);
+			end
+		end
+		if (core.machine_reset_n && core.audio_sys.mem_wr && core.audio_sys.a >= 16'hFF00) begin
+			stack_wr_top = stack_wr_top + 1;
+			if (stack_wr_top <= 3) $display("sound CPU: write to %04x at %0t ps (stack before SP set?)", core.audio_sys.a, $time);
+		end
+	end
+
 	reg vb_q = 1'b0;
 	always @(posedge clk) begin
 		vb_q <= vblank;
@@ -146,6 +165,8 @@ module tb_core;
 			$display("done after %0d interrupt acknowledges (%0d after resume)", acks, after_acks);
 			$display("sound flags: rom_bytes=%0d alive=%b ym_written=%b ym_irq=%b cmd_read=%b cmd_sent=%b ym_audible=%b",
 				core.audio_sys.rom_cnt, core.audio_sys.f_alive, core.audio_sys.f_ymw, core.audio_sys.f_irq, core.audio_sys.f_cmdrd, core.audio_sys.f_cmdsent, core.audio_sys.f_audible);
+			$display("sound flags 2: main_loop=%b int_vector=%b nmi_vector=%b wild_fetch=%b ym_timer2_start=%b",
+				core.audio_sys.f_main, core.audio_sys.f_isr, core.audio_sys.f_nmi, core.audio_sys.f_wild, core.audio_sys.f_t2);
 			$display("hi-score writes (E057-E059) by the CPU: %0d; NVRAM save requests seen: %0d cycles", hs_writes, nv_req_seen);
 			$display("audio: %0d YM writes, %0d speech writes, %0d sound-command reads, %0d PCM samples, peaks ym=%0d speech=%0d mix=%0d",
 				ym_writes, ald_writes, cmd_reads, wav_n, ym_peak, sp_peak, mix_peak);
