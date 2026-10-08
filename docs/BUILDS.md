@@ -74,3 +74,9 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   Only the interrupt routine at 0039 reads address E000 and RST 38 (opcode FF) also enters it, so "Cmd read" does not prove a real interrupt.
 - This build adds debug-tone entries: Main loop (0278 reached), INT vector (0038), NMI vector (0066), Wild fetch (opcode fetch at 8000+), YM timer2 start.
   Simulation expectation for Sauro at 2 s: main loop, INT vector and timer-2 start set; NMI vector and wild fetch not set. Not yet tested on hardware.
+
+## RBF 3a8a5f65d4da8701ef0b2fd829834eda (releases/Tecfri_20261008c_ntfix.rbf, 3,613,376 bytes): sound-CPU NMI hold-off
+- Source revision `90b08bb` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:59. 11,355 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (worst listed setup +0.716 ns, hold +0.252 ns).
+- Change: the speech-LRQ NMI to the Sauro audio CPU is held off for the first 1 ms of audio CPU time after reset.
+- Evidence: with randomised power-up state (Verilator +rand+reset, seeds 2, 4, 5 of 1-6) the previous source ran away (NMI before LD SP, wild fetch, no YM IRQ or timer 2), matching the hardware report for b9aee70a. With the change, seeds 1-6 all reach the main loop and timer-2 start with no wild fetch.
+- The real SP0256 LRQ timing after reset is unmeasured; the 1 ms is an assumption. Not yet tested on hardware.
