@@ -66,3 +66,11 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Fit: 11,338 / 41,910 ALMs (27 %), 454 / 553 RAM blocks (82 %), 35 DSP. Timing: no negative slack; worst setup +0.244 ns (framework HDMI clock), worst hold +0.253 ns.
 - Owner result on the previous diagnostic build (1d3eed9e): the 440 Hz test tone is audible, and Sauro stays silent with speech on or off, so the output path
   and the speech block are not the cause; Tricky Doc (YM3812 driven by the main CPU) has sound. Not yet tested on hardware: this build.
+
+## RBF b9aee70af83314fd81088d338fd1b6bf (releases/Tecfri_20261008b_debugtone2.rbf, 3,624,388 bytes): debug-tone build 2
+- Source revision `d7c67ae` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:27. Fit 11,355 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP.
+  Timing: no negative slack; worst setup +0.679 ns (framework HDMI clock), worst hold +0.249 ns.
+- Owner result on build 6c3827f3 (Sauro, silent): debug tones for ROM loaded, CPU running, YM written, Cmd read were audible; YM IRQ and YM audible were not.
+  Only the interrupt routine at 0039 reads address E000 and RST 38 (opcode FF) also enters it, so "Cmd read" does not prove a real interrupt.
+- This build adds debug-tone entries: Main loop (0278 reached), INT vector (0038), NMI vector (0066), Wild fetch (opcode fetch at 8000+), YM timer2 start.
+  Simulation expectation for Sauro at 2 s: main loop, INT vector and timer-2 start set; NMI vector and wild fetch not set. Not yet tested on hardware.
