@@ -80,3 +80,11 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Change: the speech-LRQ NMI to the Sauro audio CPU is held off for the first 1 ms of audio CPU time after reset.
 - Evidence: with randomised power-up state (Verilator +rand+reset, seeds 2, 4, 5 of 1-6) the previous source ran away (NMI before LD SP, wild fetch, no YM IRQ or timer 2), matching the hardware report for b9aee70a. With the change, seeds 1-6 all reach the main loop and timer-2 start with no wild fetch.
 - The real SP0256 LRQ timing after reset is unmeasured; the 1 ms is an assumption. Not yet tested on hardware.
+
+## RBF 8898b849650dd64f35f07878e98b902a (releases/Tecfri_20261008d_speechbusy.rbf, 3,644,292 bytes): speech LRQ busy time
+- Source revision `9470ce1` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 15:16. 11,358 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (smallest listed slack +0.206 ns).
+- Change: LRQ to the Sauro audio CPU stays high for at least 3 ms after each ALD write (on top of the 1 ms NMI hold-off of 90b08bb).
+- Owner report on 3a8a5f65: Sauro has sound; after game over a steady loud static; no voices heard (voices are triggered by Start 1P, not by attract mode).
+- Simulation (scripted MAME-identical play, core RTL): before the change the first game-over allophone (28) was followed by no further writes and the speech output sat at full scale for about 5 s; after it the phrase 28 28 14 00 29 04 38 20 00 is written with MAME's timing and the static is gone.
+  Still present in simulation: a full-scale burst of about 80 ms on that first noise allophone. The synthesiser alone, replayed with the same writes, does not show it; cause not yet found.
+- The 3 ms figure comes from MAME's write spacing; real SP0256 timing is unmeasured. Not yet tested on hardware.
