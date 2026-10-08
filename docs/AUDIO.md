@@ -33,3 +33,17 @@ This shows the right music at about the right level; it is not a sample-accurate
 ymfm differ and the audio CPU interrupt is the YM3812 timer (about 496 Hz) rather than MAME's 480 Hz timer, which
 also makes the tempo about 3 % faster than MAME's. No speech occurs in this window (no coin inserted).
 Listening copies: simulation/audio/rtl_sauro_boot_9s.wav and mame_sauro_boot_8s.wav.
+
+## Listening test and upstream check (2026-10-07)
+- Owner listened to MAME, ivoice.vhd and Speech256 renditions of three real Sauro phrases (simulation/audio/listen) and
+  found Speech256 the most like the voice, with no board recording to judge accuracy. MAME is not treated as authoritative.
+- Total phrase length (seconds, first to last audible sample): A: MAME 0.97, Speech256 0.91, ivoice at least 1.55
+  (cut at the window); B: 0.40, 0.38, at least 0.65; C: 0.97, 0.90, 1.02. Speech256 matches MAME's phrase length to about
+  6 % even though individual allophone lengths differ (see the table above); ivoice runs longer.
+- Intv_MiSTer issues (MiSTer-devel/Intv_MiSTer): none reports wrong voice timing or pitch. Related: #20 (voice too quiet; the
+  maintainer replied 2026-09-28 "fixed *4 voice amplitude", which probably explains the clipping seen in the vendored
+  2026-10-01 ivoice.vhd output), #7 (no in-game voice, fixed 2021), #28 (B-17 Bomber voice drops out, open, no cause),
+  #24 (Space Shuttle prototype missing voice, possibly a bad dump). Absence of an accuracy report is not evidence of accuracy.
+- Decision: keep Speech256 for now, speech accuracy is UNVERIFIED pending a recording of a real Sauro board.
+- When phrases play (MAME with scripted input): phrase B (1B 07 2D 20 00) right after the game starts; phrases A and C recur
+  during play every few seconds. What each says has not been identified.
