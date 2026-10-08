@@ -39,3 +39,12 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   others above 3.8 ns; hold slack positive, worst 0.246 ns. One critical warning, the framework's "mode" port width message.
 - Simulation evidence for this source: 9 s of machine time from reset on `sauro`: music starts at 5.0 s as in MAME, level ratio 0.83-0.99;
   speech not run through the full core yet (it is exercised standalone, docs/AUDIO.md). NOT yet tested on hardware.
+
+## RBF 0e426e13ead0557180a14c14fb6fa6ce (output_files/Arcade-Tecfri.rbf, NVRAM build): NOT FOR RELEASE, timing not clean
+- Source revision `f16aa4c` (clean tree). Quartus 17.0.2 full flow, 2026-10-07 18:34. 11,281 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP.
+- **Setup slack is negative on the framework's HDMI clock: -0.119 ns, TNS -1.204 ns**, all endpoints inside `ascal` (o_hcpt -> o_vcpt counters,
+  148.5 MHz; Fmax 145.96 MHz). Not our logic, but the slack moved +0.70 -> +0.44 -> -0.12 ns across our last three builds, so our design perturbs
+  its placement. Hold is positive (0.212 ns). This RBF has NOT been tested on hardware and should not be shipped.
+- Pending remedy: fitter seed sweep (tools/seed_sweep.ps1 -Seeds 2,3,4 in scratch copies, started, result in simulation/seed_sweep.log); adopt a
+  seed with positive slack in Arcade-Tecfri.qsf, then rebuild officially and re-record. `tools/report_hdmi_paths.tcl` lists the failing paths.
+- The last hardware-tested RBF remains aeb5f0d2 (sound, no NVRAM).
