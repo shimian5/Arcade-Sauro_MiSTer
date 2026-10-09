@@ -44,7 +44,7 @@ Everything here is MAME-model evidence plus firmware inference, **not** PCB meas
 - Watchdog timeout, sprite engine timing, Q3 of the Sauro latch, `user1` PROM role.
 
 ## F6. Milestone 3 result (main-CPU subsystem, Verilator, original ROMs)
-`rtl/tecfri_main.sv` + `rtl/tecfri_timing.sv` (provisional 320x280) execute the unmodified
+`rtl/sauro_main.sv` + `rtl/video/sauro_timing.sv` (provisional 320x280) execute the unmodified
 `sauro`, `seawolft` and `trckydoc` program ROMs through the self-test to the first ISRs.
 `tools/compare_trace.py` finds the first 40 write events (I/O `80-FF` or program `F820-F83F`,
 watchdog values excluded) identical to the MAME trace for all three sets. This shows
@@ -77,6 +77,6 @@ draw order (bg, fg, sprites), palette bank bits, and x scroll semantics (source 
 
 ## F8. RTL video block (milestone 4b)
 42 MAME frames (attract and scripted gameplay, all three games) reproduce pixel-exactly through
-`rtl/tecfri_video.sv` in Verilator; see docs/VIDEO.md for scope and limits. Scripted gameplay needs
+`rtl/video/sauro_video.sv` in Verilator; see docs/VIDEO.md for scope and limits. Scripted gameplay needs
 `PLAY=1` in `sim/mame/dump_frame.lua` (coin at frame 400, start at 450, pseudo-random controls).
 Tricky Doc's later captures are largely the continue/attract screens (credits 00).

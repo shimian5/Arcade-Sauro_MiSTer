@@ -13,13 +13,13 @@ cpu-smoke:
 	$(OUT)/cpu_smoke/Vtb_cpu_smoke
 
 # Main-CPU subsystem executing original ROMs (needs `python tools/prepare_roms.py <romdir>` first).
-MAIN_SRC := tb_main.sv ../rtl/tecfri_main.sv ../rtl/tecfri_timing.sv ../rtl/cpu_z80.v $(TV80_SRC)
+MAIN_SRC := tb_main.sv ../rtl/sauro_main.sv ../rtl/video/sauro_timing.sv ../rtl/cpu_z80.v $(TV80_SRC)
 main-build:
 	mkdir -p $(OUT)/main
 	$(VERILATOR) --binary --timing --top-module tb_main -Wno-fatal +define+TV80_REFRESH 		--Mdir $(OUT)/main $(MAIN_SRC) > $(OUT)/main/build.log 2>&1
 
 # Video block vs MAME frame vectors (see tools/prep_video_vectors.py).
-VIDEO_SRC := tb_video.sv ../rtl/tecfri_video.sv ../rtl/tecfri_timing.sv
+VIDEO_SRC := tb_video.sv ../rtl/video/sauro_video.sv ../rtl/video/sauro_timing.sv
 video-build:
 	mkdir -p $(OUT)/video
 	$(VERILATOR) --binary --timing --top-module tb_video -Wno-fatal 		--Mdir $(OUT)/video $(VIDEO_SRC) > $(OUT)/video/build.log 2>&1
@@ -28,8 +28,8 @@ video-build:
 JTOPL := ../rtl/sound/imports/jtopl/hdl
 AUDIO_SRC := $(JTOPL)/jtopl2.v $(filter-out $(JTOPL)/jtopll% $(JTOPL)/jt2413.v $(JTOPL)/jtopl2.v,$(wildcard $(JTOPL)/*.v)) \
 	$(wildcard ../rtl/sound/speech256_ce/*.v) ../rtl/sound/imports/Speech256/verilog/controller/ctrlrom.v ../rtl/sound/imports/Speech256/verilog/controller/xlat.v
-CORE_SRC := tb_core.sv ../rtl/tecfri_core.sv ../rtl/tecfri_rom.sv ../rtl/tecfri_main.sv ../rtl/tecfri_timing.sv \
-	../rtl/tecfri_video.sv ../rtl/tecfri_audio.sv ../rtl/tecfri_speech.sv ../rtl/cpu_z80.v $(TV80_SRC) $(AUDIO_SRC)
+CORE_SRC := tb_core.sv ../rtl/sauro_core.sv ../rtl/sauro_rom.sv ../rtl/sauro_main.sv ../rtl/video/sauro_timing.sv \
+	../rtl/video/sauro_video.sv ../rtl/sound/sauro_audio.sv ../rtl/sound/sauro_speech.sv ../rtl/cpu_z80.v $(TV80_SRC) $(AUDIO_SRC)
 core-build:
 	mkdir -p $(OUT)/core
 	$(VERILATOR) --binary --timing --top-module tb_core -Wno-fatal +define+TV80_REFRESH \

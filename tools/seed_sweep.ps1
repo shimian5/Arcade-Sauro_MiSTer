@@ -6,16 +6,16 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $procs = @()
 foreach ($seed in $Seeds) {
-	$dir = Join-Path $env:TEMP "tecfri_seed_$seed"
+	$dir = Join-Path $env:TEMP "sauro_seed_$seed"
 	if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
 	robocopy $root $dir /E /XD .git db incremental_db output_files simulation releases docs greybox_tmp hc_output | Out-Null
-	Add-Content -Path (Join-Path $dir 'Arcade-Tecfri.qsf') -Value "`r`nset_global_assignment -name SEED $seed"
-	$procs += Start-Process -FilePath (Join-Path $QuartusBin 'quartus_sh.exe') -ArgumentList '--flow', 'compile', 'Arcade-Tecfri' `
+	Add-Content -Path (Join-Path $dir 'Arcade-Sauro.qsf') -Value "`r`nset_global_assignment -name SEED $seed"
+	$procs += Start-Process -FilePath (Join-Path $QuartusBin 'quartus_sh.exe') -ArgumentList '--flow', 'compile', 'Arcade-Sauro' `
 		-WorkingDirectory $dir -RedirectStandardOutput (Join-Path $dir 'build.out') -RedirectStandardError (Join-Path $dir 'build.err') -PassThru -WindowStyle Hidden
 }
 $procs | Wait-Process
 foreach ($seed in $Seeds) {
-	$sum = Join-Path $env:TEMP "tecfri_seed_$seed\output_files\Arcade-Tecfri.sta.summary"
+	$sum = Join-Path $env:TEMP "sauro_seed_$seed\output_files\Arcade-Sauro.sta.summary"
 	if (-not (Test-Path $sum)) { "seed ${seed}: no timing summary (build failed)"; continue }
 	$text = (Get-Content $sum -Raw) -replace "`r", ''
 	$rows = [regex]::Matches($text, "Type  : (Setup|Hold) '([^']+)'\s+Slack : (-?[\d.]+)") | ForEach-Object { [pscustomobject]@{ Kind = $_.Groups[1].Value; Clock = $_.Groups[2].Value; Slack = [double]$_.Groups[3].Value } }

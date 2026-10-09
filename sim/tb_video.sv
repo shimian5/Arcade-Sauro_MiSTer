@@ -14,7 +14,7 @@ module tb_video;
 
 	wire [8:0] hcnt, vcnt;
 	wire hblank, vblank, vblank_start;
-	tecfri_timing timing (.clk(clk), .reset_n(reset_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt),
+	sauro_timing timing (.clk(clk), .reset_n(reset_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt),
 		.hblank(hblank), .vblank(vblank), .vblank_start(vblank_start));
 
 	reg [7:0] r_spr [0:1023];
@@ -48,7 +48,7 @@ module tb_video;
 	wire [7:0] out_r, out_g, out_b;
 	wire out_de;
 	wire [8:0] out_x, out_y;
-	tecfri_video video (
+	sauro_video video (
 		.clk(clk), .reset_n(reset_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt), .tricky(tricky),
 		.palette_bank(bank), .scroll_bg(scroll_bg), .scroll_fg_raw(scroll_fg),
 		.vid_bg_a(vid_bg_a), .vid_fg_a(vid_fg_a), .vid_spr_a(vid_spr_a),

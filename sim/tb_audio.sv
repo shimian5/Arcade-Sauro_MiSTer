@@ -13,7 +13,7 @@ module tb_audio;
 	wire dbg_ym_wr, dbg_ym_a0, dbg_ald_wr, dbg_cmd_rd;
 	wire [7:0] dbg_ym_d, dbg_ald_d;
 
-	tecfri_audio dut (
+	sauro_audio dut (
 		.clk(clk), .reset_n(reset_n), .pause(1'b0), .tricky(1'b0), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(4'd0),
 		.rom_we(rom_we), .rom_wa(rom_wa), .rom_wd(rom_wd),
 		.snd_cmd_wr(snd_cmd_wr), .snd_cmd(snd_cmd), .main_ym_wr(1'b0), .main_ym_a0(1'b0), .main_ym_d(8'h00),

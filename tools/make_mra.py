@@ -10,11 +10,11 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import rom_layout as rl
 
-# Test builds carry a leading "_" so they sort to the top of the MiSTer menu; remove it for release.
+# Beta release names (no test prefix). The RBF is Arcade-Sauro_<date>.rbf; the <rbf> tag below is the core name Sauro.
 META = {
-	"sauro":    dict(file="_Sauro.mra",              year=1987, category="Shooter", zips="sauro.zip"),
-	"seawolft": dict(file="_Sea Wolf (Tecfri).mra",  year=1987, category="Shooter", zips="seawolft.zip|sauro.zip"),
-	"trckydoc": dict(file="_Tricky Doc.mra",         year=1987, category="Platform", zips="trckydoc.zip"),
+	"sauro":    dict(file="Sauro.mra",               year=1987, category="Shooter", zips="sauro.zip"),
+	"seawolft": dict(file="Sea Wolf (Tecfri).mra",   year=1987, category="Shooter", zips="seawolft.zip|sauro.zip"),
+	"trckydoc": dict(file="Tricky Doc.mra",          year=1987, category="Platform", zips="trckydoc.zip"),
 }
 
 # DIP switches from MAME's INPUT_PORTS tecfri (bit n of DSW1 = bit n, DSW2 = bit 8+n; values listed
@@ -61,9 +61,9 @@ def main():
 	<year>{meta['year']}</year>
 	<manufacturer>Tecfri</manufacturer>
 	<category>{meta['category']}</category>
-	<rbf>Tecfri</rbf>
+	<rbf>Sauro</rbf>
 	<rotation>horizontal</rotation>
-	<!--Development core: video, game CPU, sound and battery RAM saving implemented; speech accuracy and timing unverified.-->
+	<!--Beta core: raster timing (316x284) is inferred, not measured on a board; speech voice accuracy is unverified; battery RAM saving is verified in simulation against MAME but not yet on hardware.-->
 	<romstruct>00000-0FFFF: main CPU; 10000-17FFF: audio CPU; 18000-27FFF: bg tiles; 28000-37FFF: fg tiles; 38000-57FFF: sprites; 58000-58BFF: colour PROMs R,G,B; 58C00-593FF: SP0256 ROM.</romstruct>
 	<rom index="0" zip="{meta['zips']}" md5="{md5}" type="split">
 {parts_xml(name, rl.IMAGE_SIZE)}

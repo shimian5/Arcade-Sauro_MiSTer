@@ -18,7 +18,7 @@
 //
 // Clock: clk is the arcade_video CLK_VIDEO domain; ce_pix is the mixer output CE_PIXEL.
 // vb_in must be the true core vertical blank (not the combined DE blank).
-module tecfri_crt_position #(
+module sauro_crt_position #(
 	// Raster of the arcade_video output stream, in pixel clock enables per line/frame.
 	parameter HTOTAL   = 316,
 	parameter VTOTAL   = 284,

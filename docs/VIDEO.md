@@ -1,6 +1,6 @@
 # Video block (milestone 4)
 
-`rtl/tecfri_video.sv` renders the visible 240x224 area for Sauro, Sea Wolf and Tricky Doc.
+`rtl/video/sauro_video.sv` renders the visible 240x224 area for Sauro, Sea Wolf and Tricky Doc.
 Colour PROM lookup and the DAC curve (14/31/67/143 per bit, from MAME 0.288) are inside it.
 
 ## What is evidence and what is design

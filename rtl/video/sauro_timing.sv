@@ -8,7 +8,7 @@
 // 240 active pixels gives 316, and 5 MHz / (316 x 284) = 55.714 Hz against the
 // 55.72 Hz PCB figure. Alternative: 332 x 270 (55.78 Hz). All values are
 // parameters so they can be corrected without touching the machine logic.
-module tecfri_timing #(
+module sauro_timing #(
 	parameter int H_TOTAL  = 316,
 	parameter int V_TOTAL  = 284,
 	parameter int H_ACTIVE = 240,

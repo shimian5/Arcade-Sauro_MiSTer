@@ -8,7 +8,7 @@ module tb_speech_game;
 	reg [7:0] ald_data = 8'h00;
 	wire lrq_n;
 	wire signed [15:0] sample;
-	tecfri_speech dut (.clk(clk), .reset_n(reset_n), .hold(1'b0), .ald_wr(ald_wr), .ald_data(ald_data), .lrq_n(lrq_n), .sample(sample));
+	sauro_speech dut (.clk(clk), .reset_n(reset_n), .hold(1'b0), .ald_wr(ald_wr), .ald_data(ald_data), .lrq_n(lrq_n), .sample(sample));
 
 	task put(input longint t_ps, input [7:0] d);
 		begin

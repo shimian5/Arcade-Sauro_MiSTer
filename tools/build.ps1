@@ -10,11 +10,11 @@ if (-not (Test-Path -LiteralPath $QuartusSh)) {
 $buildRoot = Split-Path -Parent $PSScriptRoot
 Push-Location -LiteralPath $buildRoot
 try {
-	& $QuartusSh --flow compile Arcade-Tecfri 2>&1 | Tee-Object -FilePath build.log
+	& $QuartusSh --flow compile Arcade-Sauro 2>&1 | Tee-Object -FilePath build.log
 	if ($LASTEXITCODE -ne 0) {
 		throw "Quartus full flow failed with exit code $LASTEXITCODE. See build.log."
 	}
-	Write-Output (Join-Path $buildRoot 'output_files\Arcade-Tecfri.rbf')
+	Write-Output (Join-Path $buildRoot 'output_files\Arcade-Sauro.rbf')
 } finally {
 	Pop-Location
 }

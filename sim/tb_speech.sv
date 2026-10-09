@@ -1,4 +1,4 @@
-// Standalone speech check: plays an allophone sequence through tecfri_speech (80 MHz system clock), feeding
+// Standalone speech check: plays an allophone sequence through sauro_speech (80 MHz system clock), feeding
 // each next byte when LRQ asserts (as the firmware's NMI handler does), then logs the time of every write and
 // writes ~48 kHz raw 16-bit mono PCM of the speech sample stream.
 //   +SEQ=<n>   0: 28 28 14 00 29 04 38 20 00   1: 1B 07 2D 20 00   2: 28 3B 2C 0D 3B 37 0D 0C 29 00   +OUT=<prefix>
@@ -11,7 +11,7 @@ module tb_speech;
 	reg [7:0] ald_data = 8'h00;
 	wire lrq_n;
 	wire signed [15:0] sample;
-	tecfri_speech dut (.clk(clk), .reset_n(reset_n), .hold(1'b0), .ald_wr(ald_wr), .ald_data(ald_data), .lrq_n(lrq_n), .sample(sample));
+	sauro_speech dut (.clk(clk), .reset_n(reset_n), .hold(1'b0), .ald_wr(ald_wr), .ald_data(ald_data), .lrq_n(lrq_n), .sample(sample));
 
 	reg [7:0] seq [0:15];
 	integer n = 0, idx = 0, seqsel = 0, raw_f, log_f, div = 0, samples = 0, peak = 0;

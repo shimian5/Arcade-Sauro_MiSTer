@@ -19,7 +19,7 @@
 //
 // Memory interfaces are synchronous with one clk of read latency; gfx ROM and PROM storage
 // is supplied by the caller.
-module tecfri_video #(
+module sauro_video #(
 	parameter int H_ACTIVE = 240,
 	parameter int V_ACTIVE = 224,
 	parameter int V_TOTAL  = 284
@@ -34,7 +34,7 @@ module tecfri_video #(
 	input  logic [7:0]  scroll_bg,
 	input  logic [7:0]  scroll_fg_raw,  // raw port value; the bit permutation is applied here
 
-	// Video RAM read ports (to tecfri_main)
+	// Video RAM read ports (to sauro_main)
 	output logic [9:0]  vid_bg_a,
 	output logic [9:0]  vid_fg_a,
 	output logic [9:0]  vid_spr_a,

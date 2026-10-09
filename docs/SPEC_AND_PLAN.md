@@ -109,7 +109,7 @@ coin counters, Q3 unknown ("sound IRQ trigger?"), Q5/Q6 palette bank bits
 - Clocks: PLL (instance `pll`) 40/80 MHz-class system clock with clock enables
   for 5 MHz, 4 MHz, YM3812 4/2.5 MHz, SP0256 4 MHz; video pixel enable from a
   separate counter. Machine speed is independent of video output.
-- Modules: `tecfri_board` (per-variant map select via game index), `video`
+- Modules: `sauro_board` (per-variant map select via game index), `video`
   (tile fetch, sprite engine, palette PROM), `ym3812` (jtopl), `sp0256` (vendored
   Speech256), `pause.sv` (from Victory, with state-hold), `nvram`, MRA builder.
 - ROMs in SDRAM: main 64 KB, audio 32 KB, tiles/sprites 192-ish KB, PROMs, AL2.

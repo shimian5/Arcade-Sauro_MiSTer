@@ -21,14 +21,14 @@ module tb_main;
 
 	wire hblank, vblank, vblank_start;
 	wire [8:0] hcnt, vcnt;
-	tecfri_timing timing (.clk(clk), .reset_n(reset_n), .pix_cen(cen), .hcnt(hcnt), .vcnt(vcnt),
+	sauro_timing timing (.clk(clk), .reset_n(reset_n), .pix_cen(cen), .hcnt(hcnt), .vcnt(vcnt),
 		.hblank(hblank), .vblank(vblank), .vblank_start(vblank_start));
 
 	reg tricky = 1'b0;
 	wire bus_wr, bus_io;
 	wire [15:0] bus_a;
 	wire [7:0]  bus_d;
-	tecfri_main dut (
+	sauro_main dut (
 		.clk(clk), .reset_n(reset_n), .cen_cpu(cen), .tricky(tricky), .vblank_start(vblank_start),
 		.dsw1(8'h66), .dsw2(8'h2f), .p1(8'h00), .p2(8'h00),	// MAME defaults, see trace_io.lua reads
 		.rom_addr(rom_addr), .rom_data(rom_data),

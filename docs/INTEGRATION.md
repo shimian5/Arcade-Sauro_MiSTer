@@ -1,11 +1,11 @@
 # Integration (milestone 5): machine core and MiSTer top level
 
 ## Structure
-- `Arcade-Tecfri.sv`: `emu` top level. Unmodified `sys/`; standard `hps_io`, `pll` (instance named `pll`),
+- `Arcade-Sauro.sv`: `emu` top level. Unmodified `sys/`; standard `hps_io`, `pll` (instance named `pll`),
   `arcade_video`, and the Pause_MiSTer `pause` module. DIP bytes arrive via ioctl index 254.
-- `rtl/tecfri_core.sv`: everything else, so Verilator can drive the ROM download and run from reset.
-- ROM storage is all M10K (`rtl/tecfri_rom.sv`), written by the download, one clk read latency. No SDRAM.
-- Download layout (index 0) and the one-byte board select (index 1): see the header of `tecfri_core.sv`;
+- `rtl/sauro_core.sv`: everything else, so Verilator can drive the ROM download and run from reset.
+- ROM storage is all M10K (`rtl/sauro_rom.sv`), written by the download, one clk read latency. No SDRAM.
+- Download layout (index 0) and the one-byte board select (index 1): see the header of `sauro_core.sv`;
   `tools/rom_layout.py` is the single source for images and MRA files (CRC and size are checked when built).
 
 ## Clocks

@@ -1,28 +1,28 @@
 <?xml version='1.0' encoding='utf-8'?>
 <misterromdescription>
-	<name>Sauro</name>
-	<setname>sauro</setname>
-	<mratimestamp>20261007</mratimestamp>
+	<name>Sea Wolf (Tecfri)</name>
+	<setname>seawolft</setname>
+	<mratimestamp>20261008</mratimestamp>
 	<mameversion>0257</mameversion>
 	<year>1987</year>
 	<manufacturer>Tecfri</manufacturer>
 	<category>Shooter</category>
-	<rbf>Tecfri</rbf>
+	<rbf>Sauro</rbf>
 	<rotation>horizontal</rotation>
-	<!--Development core: video and game CPU implemented; sound and NVRAM saving are not yet implemented.-->
+	<!--Beta core: raster timing (316x284) is inferred, not measured on a board; speech voice accuracy is unverified; battery RAM saving is verified in simulation against MAME but not yet on hardware.-->
 	<romstruct>00000-0FFFF: main CPU; 10000-17FFF: audio CPU; 18000-27FFF: bg tiles; 28000-37FFF: fg tiles; 38000-57FFF: sprites; 58000-58BFF: colour PROMs R,G,B; 58C00-593FF: SP0256 ROM.</romstruct>
-	<rom index="0" zip="sauro.zip" md5="45a595e50de092150ce351e97e2d975d" type="split">
-		<part name="sauro-2.bin" crc="2e356e2d" length="0x8000" />
-		<part name="sauro-1.bin" crc="95d03e5e" length="0x8000" />
+	<rom index="0" zip="seawolft.zip|sauro.zip" md5="b254125ca8f64a5f6ba5eac1ae195d3d" type="split">
+		<part name="1.bin" crc="bd8bd328" length="0x8000" />
+		<part name="2.bin" crc="870b05ef" length="0x8000" />
 		<part name="sauro-3.bin" crc="0d501e1b" length="0x8000" />
 		<part name="sauro-6.bin" crc="4b77cb0f" length="0x8000" />
-		<part name="sauro-7.bin" crc="187da060" length="0x8000" />
+		<part name="3.bin" crc="883bb7d1" length="0x8000" />
 		<part name="sauro-4.bin" crc="9b617cda" length="0x8000" />
 		<part name="sauro-5.bin" crc="a6e2640d" length="0x8000" />
-		<part name="sauro-8.bin" crc="e08b5d5e" length="0x8000" />
-		<part name="sauro-9.bin" crc="7c707195" length="0x8000" />
-		<part name="sauro-10.bin" crc="c93380d1" length="0x8000" />
-		<part name="sauro-11.bin" crc="f47982a8" length="0x8000" />
+		<part name="10.bin" crc="b93f5487" length="0x8000" />
+		<part name="9.bin" crc="0964ac95" length="0x8000" />
+		<part name="8.bin" crc="e71726a9" length="0x8000" />
+		<part name="7.bin" crc="8a700276" length="0x8000" />
 		<part name="82s137-3.bin" crc="d52c4cd0" length="0x400" />
 		<part name="82s137-2.bin" crc="c3e96d5d" length="0x400" />
 		<part name="82s137-1.bin" crc="bdfcf00c" length="0x400" />
@@ -42,4 +42,5 @@
 		<dip bits="13,14" name="Lives" ids="5,4,3,2" />
 	</switches>
 	<buttons names="Button 1,Button 2,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L" />
+	<nvram index="4" size="2048" />
 </misterromdescription>

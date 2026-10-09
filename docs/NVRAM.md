@@ -1,6 +1,6 @@
 # Battery RAM (NVRAM) persistence
 
-Work RAM E000-E7FF (2 KB) is battery backed on the board; MAME's NVRAM default is all ones. `rtl/tecfri_nvram.sv` holds it and
+Work RAM E000-E7FF (2 KB) is battery backed on the board; MAME's NVRAM default is all ones. `rtl/sauro_nvram.sv` holds it and
 implements MiSTer's standard save/restore stream (ioctl index 4, MRA `<nvram index="4" size="2048"/>`); the interface follows the one
 used by the Victory core. `sys/` is unchanged.
 

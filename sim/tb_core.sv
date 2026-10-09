@@ -85,7 +85,7 @@ module tb_core;
 		$fwrite(log_f, "%0t COEF %0d\n", $time, $signed(core.audio_sys.speech.speech.coef_bus));
 	end
 
-	tecfri_core core (
+	sauro_core core (
 		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(4'd0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),

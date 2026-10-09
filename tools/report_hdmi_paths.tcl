@@ -1,6 +1,6 @@
 # Inspect the worst setup paths of the framework's HDMI clock on the finished compile (analysis only, no rebuild).
 # Run: quartus_sta -t tools/report_hdmi_paths.tcl
-project_open Arcade-Tecfri
+project_open Arcade-Sauro
 create_timing_netlist
 read_sdc
 update_timing_netlist

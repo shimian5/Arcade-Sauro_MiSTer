@@ -1,4 +1,4 @@
-# Tecfri arcade core for MiSTer (Sauro, Sea Wolf, Tricky Doc)
+# Arcade-Sauro: Tecfri Sauro-family arcade core for MiSTer (Sauro, Sea Wolf, Tricky Doc)
 
 Work in progress; **nothing here is playable or hardware-accepted yet.**
 
@@ -13,5 +13,5 @@ Imported components (pinned, licenses retained):
 - `rtl/sound/imports/Speech256` (trcwm/Speech256 @ 4c311cf, LGPL-3.0): SP0256.
 - `rtl/pause.sv`: JimmyStones Pause_MiSTer (GPL-3.0), as used in Victory.
 
-Tests: `wsl -d archlinux -- make -C /mnt/c/MiSTerDev/Arcade-Tecfri_MiSTer/sim test`
+Tests: `wsl -d archlinux -- make -C /mnt/c/MiSTerDev/Arcade-Sauro_MiSTer/sim test`
 Build: `tools/build.ps1` (full Quartus flow, unsandboxed PowerShell).

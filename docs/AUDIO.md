@@ -1,6 +1,6 @@
 # Audio (milestone 6): status and evidence
 
-## Structure (rtl/tecfri_audio.sv, rtl/tecfri_speech.sv)
+## Structure (rtl/sound/sauro_audio.sv, rtl/sound/sauro_speech.sv)
 YM3812 = jtopl2 (4 MHz Sauro family, 2.5 MHz Tricky Doc); Sauro family also has a Z80 sound CPU (4 MHz) with
 its ROM/RAM/command latch, INT = YM3812 IRQ (inferred from the firmware, MAME fakes 480 Hz), NMI = SP0256 LRQ.
 Pause freezes the sound CPU and chips and mutes. The speech block is currently Speech256 (see below).

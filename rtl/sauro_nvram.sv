@@ -14,7 +14,7 @@
 //   of the first if writes continue. Only a complete, ordered 2048-byte transfer clears pending changes; an
 //   interrupted one leaves them pending. User reset does not clear memory or pending changes.
 // - Both CPU and host ports are registered one-clock reads; Quartus infers two coherent copies of the array.
-module tecfri_nvram #(
+module sauro_nvram #(
 	parameter int QUIET_CYCLES = 80_000_000,        // 1 s at 80 MHz
 	parameter int MAX_CYCLES   = 2_400_000_000      // 30 s
 )(

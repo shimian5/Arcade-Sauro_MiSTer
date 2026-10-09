@@ -1,4 +1,4 @@
-# Tecfri (Sauro, Sea Wolf, Tricky Doc) development instructions
+# Arcade-Sauro (Tecfri: Sauro, Sea Wolf, Tricky Doc) development instructions
 
 Milestones are distinct and reported separately: **playable**, **diagnostically
 correct**, **timing-clean**, **hardware-accepted**.
@@ -33,7 +33,7 @@ Quartus 17.0.2 (`C:\MiSTerDev\intelFPGA_lite\17.0`). No schematics exist; MAME
 11. After builds inspect setup/hold, clocks, unconstrained paths, RAM, DSP,
     logic and PLL usage. Fix accidental resource expansion at its source.
 12. Validate at several levels with Verilator in WSL2 `archlinux`:
-    `wsl -d archlinux -- make -C /mnt/c/MiSTerDev/Arcade-Tecfri_MiSTer/sim test`.
+    `wsl -d archlinux -- make -C /mnt/c/MiSTerDev/Arcade-Sauro_MiSTer/sim test`.
     Derive expectations independently of the RTL where practical. Simulation,
     synthesis and hardware acceptance are separate evidence.
 13. Package ROMs accurately: chip CRCs, assembled MD5, offsets, setname, core

@@ -1,6 +1,6 @@
 //============================================================================
 //
-//  Tecfri arcade core for MiSTer: Sauro, Sea Wolf (Tecfri), Tricky Doc
+//  Sauro arcade core for MiSTer (Tecfri Sauro-family hardware): Sauro, Sea Wolf (Tecfri), Tricky Doc
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -58,7 +58,7 @@ assign VIDEO_ARY = (!ar) ? 12'd3 : 12'd0;
 
 `include "build_id.v"
 localparam CONF_STR = {
-	"Tecfri;;",
+	"Sauro;;",
 	"-;",
 	"O[122:121],Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O[3:1],Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
@@ -125,7 +125,7 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.ioctl_dout(ioctl_dout),
 	.ioctl_index(ioctl_index),
 
-	// battery RAM save/restore: standard upload request, image index 4 (see rtl/tecfri_nvram.sv)
+	// battery RAM save/restore: standard upload request, image index 4 (see rtl/sauro_nvram.sv)
 	.ioctl_upload(ioctl_upload),
 	.ioctl_rd(ioctl_rd),
 	.ioctl_din(nv_data),
@@ -179,7 +179,7 @@ wire  [7:0] core_r, core_g, core_b;
 wire        core_hblank, core_vblank, core_hsync, core_vsync;
 wire        pause_cpu;
 
-tecfri_core core
+sauro_core core
 (
 	.clk(clk_sys),
 	.reset(reset),
@@ -292,7 +292,7 @@ end
 // With the adjust Off, VGA_HS/VGA_VS are the arcade_video sync, bit for bit.
 // vb_in is the true core vblank (not the combined DE blank), per the CRT-Adjust notes.
 wire [23:0] crt_rgb;
-tecfri_crt_position #(.HTOTAL(316), .VTOTAL(284), .HSYNC_COL(252)) crt_position
+sauro_crt_position #(.HTOTAL(316), .VTOTAL(284), .HSYNC_COL(252)) crt_position
 (
 	.clk(CLK_VIDEO), .ce_pix(mixer_ce),
 	.enabled(crt_option_video[11]), .scandoubler(crt_option_video[12]),

@@ -2,10 +2,10 @@
 
 Readiness claims name the exact artifact they apply to. Add a row for every bitstream that is tested.
 
-## RBF 60c2c1c32ee5194645e6802417e8aa68  (Arcade-Tecfri.rbf, 3,459,140 bytes)
+## RBF 60c2c1c32ee5194645e6802417e8aa68  (Arcade-Sauro.rbf, 3,459,140 bytes)
 - Source revision: `949a57959aeb78e4f981c990d69c2eba3a16c60e` (clean tree). An earlier build from the tree one
   commit before that, which still carried an unconnected `.dim_video()` named port, produced a bit-identical RBF.
-- Tool: Quartus Prime 17.0.2 Build 602 Lite, `quartus_sh --flow compile Arcade-Tecfri` via `tools/build.ps1`,
+- Tool: Quartus Prime 17.0.2 Build 602 Lite, `quartus_sh --flow compile Arcade-Sauro` via `tools/build.ps1`,
   device 5CSEBA6U23I7. Built 2026-10-07.
 - Fit: 9,364 / 41,910 ALMs (22 %); block memory 3,189,953 / 5,662,720 bits (56 %), 408 / 553 RAM blocks (74 %);
   33 DSP blocks, all in the framework (none in this design); 3 PLLs.
@@ -28,9 +28,9 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Not yet checked on hardware: VGA/15 kHz RGB output, scandoubler/effects, pause button, DIP menu changes.
   No sound in this build.
 
-## RBF aeb5f0d20531530bfcc839f1376c8a29  (releases/Tecfri_20261007.rbf, 3,600,856 bytes): first build with sound
-- Source revision: `0eba59a` (tracked tree clean; untracked WIP files rtl/tecfri_nvram.sv, sim/tb_nvram.sv are not in files.qip).
-- Tool: Quartus Prime 17.0.2 Build 602 Lite, `quartus_sh --flow compile Arcade-Tecfri` via `tools/build.ps1`, built 2026-10-07 18:08.
+## RBF aeb5f0d20531530bfcc839f1376c8a29  (releases/dev/Tecfri_20261007.rbf, 3,600,856 bytes): first build with sound
+- Source revision: `0eba59a` (tracked tree clean; untracked WIP files rtl/sauro_nvram.sv, sim/tb_nvram.sv are not in files.qip).
+- Tool: Quartus Prime 17.0.2 Build 602 Lite, `quartus_sh --flow compile Arcade-Sauro` via `tools/build.ps1`, built 2026-10-07 18:08.
 - Contents: video and CPU as in RBF 60c2c1c3, plus the YM3812 (jtopl2), the Sauro-family sound CPU, and Speech256 (clock-enabled copy)
   for the SP0256 voice. Mix levels calibrated against MAME captures (provisional). No NVRAM saving, no CRT controls yet.
 - Fit: 11,156 / 41,910 ALMs (27 %); block memory 3,507,966 bits (62 %), 452 / 553 RAM blocks (82 %); 35 DSP blocks (framework 33 plus
@@ -40,25 +40,25 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Simulation evidence for this source: 9 s of machine time from reset on `sauro`: music starts at 5.0 s as in MAME, level ratio 0.83-0.99;
   speech not run through the full core yet (it is exercised standalone, docs/AUDIO.md). NOT yet tested on hardware.
 
-## RBF 0e426e13ead0557180a14c14fb6fa6ce (output_files/Arcade-Tecfri.rbf, NVRAM build): NOT FOR RELEASE, timing not clean
+## RBF 0e426e13ead0557180a14c14fb6fa6ce (output_files/Arcade-Sauro.rbf, NVRAM build): NOT FOR RELEASE, timing not clean
 - Source revision `f16aa4c` (clean tree). Quartus 17.0.2 full flow, 2026-10-07 18:34. 11,281 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP.
 - **Setup slack is negative on the framework's HDMI clock: -0.119 ns, TNS -1.204 ns**, all endpoints inside `ascal` (o_hcpt -> o_vcpt counters,
   148.5 MHz; Fmax 145.96 MHz). Not our logic, but the slack moved +0.70 -> +0.44 -> -0.12 ns across our last three builds, so our design perturbs
   its placement. Hold is positive (0.212 ns). This RBF has NOT been tested on hardware and should not be shipped.
 - Pending remedy: fitter seed sweep (tools/seed_sweep.ps1 -Seeds 2,3,4 in scratch copies, started, result in simulation/seed_sweep.log); adopt a
-  seed with positive slack in Arcade-Tecfri.qsf, then rebuild officially and re-record. `tools/report_hdmi_paths.tcl` lists the failing paths.
+  seed with positive slack in Arcade-Sauro.qsf, then rebuild officially and re-record. `tools/report_hdmi_paths.tcl` lists the failing paths.
 - The last hardware-tested RBF remains aeb5f0d2 (sound, no NVRAM).
 
-## RBF 1d3eed9e1e8af5941859322233d457b8 (releases/Tecfri_20261007b_diag.rbf, 3,601,736 bytes): diagnostic build
+## RBF 1d3eed9e1e8af5941859322233d457b8 (releases/dev/Tecfri_20261007b_diag.rbf, 3,601,736 bytes): diagnostic build
 - Source revision `9452dfb` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-07 20:28.
-- Adds battery RAM save/restore (rtl/tecfri_nvram.sv, MRA `<nvram index="4">`), and two diagnostic OSD switches for the silent Sauro/Sea Wolf
+- Adds battery RAM save/restore (rtl/sauro_nvram.sv, MRA `<nvram index="4">`), and two diagnostic OSD switches for the silent Sauro/Sea Wolf
   sound report: "Speech (Sauro)" On/Off (drops the voice from the mix) and "Sound test tone" (440 Hz square through the output path).
 - Fit: 11,292 / 41,910 ALMs (27 %); 454 / 553 RAM blocks (82 %); 35 DSP blocks. Timing: no negative slack; worst setup +0.749 ns (HDMI scaler
   clock), worst hold +0.248 ns. The earlier default-seed NVRAM build (0e426e13) missed by -0.119 ns on the framework's ascal paths.
 - Owner report on RBF aeb5f0d2: Tricky Doc has sound; Sauro and Sea Wolf make no sound at all. Cause not yet found; simulation with zero-initialised
   state plays them correctly. NOT yet tested on hardware: this build.
 
-## RBF 6c3827f33052d4d94c35b136e05b6ef6 (releases/Tecfri_20261008_debugtone.rbf, 3,617,128 bytes): debug-tone diagnostic build
+## RBF 6c3827f33052d4d94c35b136e05b6ef6 (releases/dev/Tecfri_20261008_debugtone.rbf, 3,617,128 bytes): debug-tone diagnostic build
 - Source revision `f17e0f9` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:03.
 - Adds the OSD "Debug tone" selector: a tone plays once the chosen event has happened since reset (ROM loaded, sound CPU running past 0100,
   YM3812 written, YM3812 IRQ low, command latch read, main CPU sent a sound command, YM3812 output audible). In simulation (Sauro, zero-initialised
@@ -67,7 +67,7 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Owner result on the previous diagnostic build (1d3eed9e): the 440 Hz test tone is audible, and Sauro stays silent with speech on or off, so the output path
   and the speech block are not the cause; Tricky Doc (YM3812 driven by the main CPU) has sound. Not yet tested on hardware: this build.
 
-## RBF b9aee70af83314fd81088d338fd1b6bf (releases/Tecfri_20261008b_debugtone2.rbf, 3,624,388 bytes): debug-tone build 2
+## RBF b9aee70af83314fd81088d338fd1b6bf (releases/dev/Tecfri_20261008b_debugtone2.rbf, 3,624,388 bytes): debug-tone build 2
 - Source revision `d7c67ae` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:27. Fit 11,355 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP.
   Timing: no negative slack; worst setup +0.679 ns (framework HDMI clock), worst hold +0.249 ns.
 - Owner result on build 6c3827f3 (Sauro, silent): debug tones for ROM loaded, CPU running, YM written, Cmd read were audible; YM IRQ and YM audible were not.
@@ -75,13 +75,13 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - This build adds debug-tone entries: Main loop (0278 reached), INT vector (0038), NMI vector (0066), Wild fetch (opcode fetch at 8000+), YM timer2 start.
   Simulation expectation for Sauro at 2 s: main loop, INT vector and timer-2 start set; NMI vector and wild fetch not set. Not yet tested on hardware.
 
-## RBF 3a8a5f65d4da8701ef0b2fd829834eda (releases/Tecfri_20261008c_ntfix.rbf, 3,613,376 bytes): sound-CPU NMI hold-off
+## RBF 3a8a5f65d4da8701ef0b2fd829834eda (releases/dev/Tecfri_20261008c_ntfix.rbf, 3,613,376 bytes): sound-CPU NMI hold-off
 - Source revision `90b08bb` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 09:59. 11,355 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (worst listed setup +0.716 ns, hold +0.252 ns).
 - Change: the speech-LRQ NMI to the Sauro audio CPU is held off for the first 1 ms of audio CPU time after reset.
 - Evidence: with randomised power-up state (Verilator +rand+reset, seeds 2, 4, 5 of 1-6) the previous source ran away (NMI before LD SP, wild fetch, no YM IRQ or timer 2), matching the hardware report for b9aee70a. With the change, seeds 1-6 all reach the main loop and timer-2 start with no wild fetch.
 - The real SP0256 LRQ timing after reset is unmeasured; the 1 ms is an assumption. Not yet tested on hardware.
 
-## RBF 8898b849650dd64f35f07878e98b902a (releases/Tecfri_20261008d_speechbusy.rbf, 3,644,292 bytes): speech LRQ busy time
+## RBF 8898b849650dd64f35f07878e98b902a (releases/dev/Tecfri_20261008d_speechbusy.rbf, 3,644,292 bytes): speech LRQ busy time
 - Source revision `9470ce1` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 15:16. 11,358 ALMs (27 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (smallest listed slack +0.206 ns).
 - Change: LRQ to the Sauro audio CPU stays high for at least 3 ms after each ALD write (on top of the 1 ms NMI hold-off of 90b08bb).
 - Owner report on 3a8a5f65: Sauro has sound; after game over a steady loud static; no voices heard (voices are triggered by Start 1P, not by attract mode).
@@ -89,14 +89,14 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
   Still present in simulation: a full-scale burst of about 80 ms on that first noise allophone. The synthesiser alone, replayed with the same writes, does not show it; cause not yet found.
 - The 3 ms figure comes from MAME's write spacing; real SP0256 timing is unmeasured. Not yet tested on hardware.
 
-## RBF 262bae55212489ae27c41983c55fbd68 (releases/Tecfri_20261008e_speechfix_crt.rbf, 3,626,120 bytes): speech coefficient interlock + CRT Adjust
+## RBF 262bae55212489ae27c41983c55fbd68 (releases/dev/Tecfri_20261008e_speechfix_crt.rbf, 3,626,120 bytes): speech coefficient interlock + CRT Adjust
 - Source revision `370eacd` (clean tree), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 16:38. 11,541 ALMs (28 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (smallest listed slack +0.192 ns).
 - Owner report on 8898b849: a very loud static crack before each speech clip (also in attract mode); speech present but "doesn't sound right".
 - Cause found in simulation (standalone speech block, 32 write phases within the 256-clock sample frame): the Speech256 controller starts an allophone's coefficient burst while the filter may be mid-computation (shared coefficient ring, no interlock), giving a scrambled coefficient set that rings at full scale. 13 of 32 phases reached peak 32767 before the change; all 32 give peak 52 after it. `sim/tb_speech_equiv.sv` (interlock disabled by parameter) still reports 0 mismatches against the pristine Speech256.
 - Change: TCE_CONTROLLER starts the burst only in the first 40 enabled clocks of the filter's idle window (rtl/sound/speech256_ce, ADAPTATION.md). Also in this build: 3 ms LRQ busy time (9470ce1) and the new core-side CRT Adjust (OSD: CRT Adjust Off/On, CRT H-Position, CRT V-Shift) adapted from Victory; off by default.
 - Not tested: full-core replay of the fix (not rerun after the interlock), hardware, CRT Adjust (raster 316x284 at the pixel-enable level, HSync column 252, HDMI behaviour while On are all unverified).
 
-## RBF 4ba8ba9acc81fa67b2861a98260c0685 (releases/Tecfri_20261008f_crtmenu.rbf, 3,599,976 bytes): CRT Adjust menu mask fix
+## RBF 4ba8ba9acc81fa67b2861a98260c0685 (releases/dev/Tecfri_20261008f_crtmenu.rbf, 3,599,976 bytes): CRT Adjust menu mask fix
 - Source revision `5ebe565` (clean tree; later commits only add photos and docs), Quartus 17.0.2 full flow, fitter seed 2, 2026-10-08 17:28. 11,535 ALMs (28 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (smallest listed slack +0.242 ns).
 - Change vs 262bae55: the hps_io status_menumask bits were swapped, which disabled "CRT Adjust" while it was Off (it could never be switched on) and hid/showed H-Position/V-Shift at the wrong time. Now bit 0 hides the sliders unless Adjust is On, bit 1 disables Adjust only in scandoubler modes (same polarity as Victory). No other RTL change.
 - Owner report on 262bae55: CRT Adjust greyed out (this fix). Analog (Direct Video) picture dark on a CRT, also on earlier builds, while HDMI looks fine.

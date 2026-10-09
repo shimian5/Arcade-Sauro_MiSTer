@@ -9,9 +9,9 @@ local frame = 0
 local function log(cpu, what, ...)
 	out:write(string.format("%.6f f%d %s pc=%04x %s\n", emu.time(), frame, cpu, cpu == "M" and main.state["PC"].value or audio.state["PC"].value, string.format(what, ...)))
 end
-tecfri_taps = {}   -- global: MAME unregisters taps and notifiers that Lua garbage-collects
+sauro_taps = {}   -- global: MAME unregisters taps and notifiers that Lua garbage-collects
 local function tapw(cpu, dev, space, s, e, name)
-	tecfri_taps[#tecfri_taps+1] = dev.spaces[space]:install_write_tap(s, e, name, function(off, data, mask)
+	sauro_taps[#sauro_taps+1] = dev.spaces[space]:install_write_tap(s, e, name, function(off, data, mask)
 		log(cpu, "%s w %04x=%02x", space, off, data & 0xff)
 	end)
 end
@@ -24,7 +24,7 @@ end
 -- Input port reads (first 4 per address) so DIP/input defaults can be taken from MAME.
 local rd_count = {}
 local function tapr(cpu, dev, space, s, e, name)
-	tecfri_taps[#tecfri_taps+1] = dev.spaces[space]:install_read_tap(s, e, name, function(off, data, mask)
+	sauro_taps[#sauro_taps+1] = dev.spaces[space]:install_read_tap(s, e, name, function(off, data, mask)
 		rd_count[off] = (rd_count[off] or 0) + 1
 		if rd_count[off] <= 4 then log(cpu, "%s r %04x -> %02x", space, off, data & 0xff) end
 	end)
@@ -33,7 +33,7 @@ if not m.system.name:find("trckydoc") then tapr("M", main, "io", 0x00, 0x7f, "mi
 if audio then
 	tapw("A", audio, "program", 0xa000, 0xa000, "aspeech")
 	tapw("A", audio, "program", 0xc000, 0xc001, "aym")
-	tecfri_taps[#tecfri_taps+1] = audio.spaces["program"]:install_read_tap(0xe000, 0xe000, "acmd", function(off, data, mask)
+	sauro_taps[#sauro_taps+1] = audio.spaces["program"]:install_read_tap(0xe000, 0xe000, "acmd", function(off, data, mask)
 		log("A", "cmd read -> %02x", data & 0xff)
 	end)
 end
@@ -57,7 +57,7 @@ local function drive_input()
 		end
 	end
 end
-tecfri_frame_notifier = emu.add_machine_frame_notifier(function()
+sauro_frame_notifier = emu.add_machine_frame_notifier(function()
 	frame = frame + 1
 	drive_input()
 	if frame % 60 == 1 then
@@ -67,4 +67,4 @@ tecfri_frame_notifier = emu.add_machine_frame_notifier(function()
 	end
 	out:flush()
 end)
-tecfri_stop_notifier = emu.add_machine_stop_notifier(function() out:close() end)
+sauro_stop_notifier = emu.add_machine_stop_notifier(function() out:close() end)

@@ -14,7 +14,7 @@
 // the audio side derives 4 MHz (1/20) and 2.5 MHz (1/32) enables from the same clock.
 // MAME's CPU clock plan is used; the second crystal on the Sauro board (marked 8...) is not
 // yet understood and is not modelled.
-module tecfri_core #(
+module sauro_core #(
 	// PROVISIONAL sync placement (unmeasured; see docs/PIXEL_TIMING.md)
 	parameter int H_SYNC_START = 252,
 	parameter int H_SYNC_END   = 276,
@@ -117,27 +117,27 @@ module tecfri_core #(
 
 	logic [15:0] rom_addr;
 	logic [7:0]  rom_data;
-	tecfri_rom #(16) main_rom (.clk(clk), .we(we_main), .wa(a[15:0]), .wd(ioctl_data), .ra(rom_addr), .q(rom_data));
+	sauro_rom #(16) main_rom (.clk(clk), .we(we_main), .wa(a[15:0]), .wd(ioctl_data), .ra(rom_addr), .q(rom_data));
 
 	logic [15:0] bg_a, fg_a;
 	logic [16:0] spr_a;
 	logic [7:0]  bg_q, fg_q, spr_q;
 	wire  [15:0] bg_wa = a[15:0] - 16'h8000;                         // 18000 -> 0
 	wire  [15:0] fg_wa = a[15:0] - 16'h8000;                         // 28000 -> 0
-	tecfri_rom #(16) bg_rom  (.clk(clk), .we(we_bg), .wa(bg_wa), .wd(ioctl_data), .ra(bg_a),  .q(bg_q));
-	tecfri_rom #(16) fg_rom  (.clk(clk), .we(we_fg),  .wa(fg_wa), .wd(ioctl_data), .ra(fg_a),  .q(fg_q));
-	tecfri_rom #(17) spr_rom (.clk(clk), .we(we_spr), .wa(a[16:0] - 17'h18000), .wd(ioctl_data), .ra(spr_a), .q(spr_q));
+	sauro_rom #(16) bg_rom  (.clk(clk), .we(we_bg), .wa(bg_wa), .wd(ioctl_data), .ra(bg_a),  .q(bg_q));
+	sauro_rom #(16) fg_rom  (.clk(clk), .we(we_fg),  .wa(fg_wa), .wd(ioctl_data), .ra(fg_a),  .q(fg_q));
+	sauro_rom #(17) spr_rom (.clk(clk), .we(we_spr), .wa(a[16:0] - 17'h18000), .wd(ioctl_data), .ra(spr_a), .q(spr_q));
 
 	logic [9:0] pal_a;
 	logic [7:0] pal_rq, pal_gq, pal_bq;
-	tecfri_rom #(10) prom_r (.clk(clk), .we(we_pr), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_rq));
-	tecfri_rom #(10) prom_g (.clk(clk), .we(we_pg), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_gq));
-	tecfri_rom #(10) prom_b (.clk(clk), .we(we_pb), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_bq));
+	sauro_rom #(10) prom_r (.clk(clk), .we(we_pr), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_rq));
+	sauro_rom #(10) prom_g (.clk(clk), .we(we_pg), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_gq));
+	sauro_rom #(10) prom_b (.clk(clk), .we(we_pb), .wa(a[9:0]), .wd(ioctl_data), .ra(pal_a), .q(pal_bq));
 
 	// ------------------------------------------------------------ timing, machine, video
 	logic [8:0] hcnt, vcnt;
 	logic       vblank_start, hb_unused, vb_unused;
-	tecfri_timing timing (.clk(clk), .reset_n(por_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt),
+	sauro_timing timing (.clk(clk), .reset_n(por_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt),
 		.hblank(hb_unused), .vblank(vb_unused), .vblank_start(vblank_start));
 
 	logic        nv_armed = 1'b0;                          // set at the first interrupt after reset
@@ -148,7 +148,7 @@ module tecfri_core #(
 	logic        wram_wr;
 	logic [10:0] wram_a;
 	logic [7:0]  wram_d, wram_q;
-	tecfri_nvram nvram (
+	sauro_nvram nvram (
 		.clk(clk),
 		.cpu_addr(wram_a), .cpu_data(wram_d), .cpu_wr(wram_wr), .cpu_q(wram_q),
 		.download(ioctl_download), .upload(ioctl_upload), .wr(ioctl_wr), .rd(ioctl_rd), .arm(nv_armed),
@@ -163,7 +163,7 @@ module tecfri_core #(
 	logic       snd_cmd_wr, ym_wr, ym_a0, wd_kick;
 	logic [7:0] snd_cmd, ym_d;
 
-	tecfri_main main (
+	sauro_main main (
 		.clk(clk), .reset_n(machine_reset_n), .cen_cpu(cpu_cen), .tricky(tricky), .vblank_start(vblank_start),
 		.dsw1(dsw1), .dsw2(dsw2), .p1(p1), .p2(p2),
 		.rom_addr(rom_addr), .rom_data(rom_data),
@@ -177,7 +177,7 @@ module tecfri_core #(
 
 	logic       out_de;
 	logic [8:0] out_x, out_y;
-	tecfri_video video (
+	sauro_video video (
 		.clk(clk), .reset_n(por_n), .pix_cen(pix_cen), .hcnt(hcnt), .vcnt(vcnt), .tricky(tricky),
 		.palette_bank(palette_bank), .scroll_bg(scroll_bg), .scroll_fg_raw(scroll_fg),
 		.vid_bg_a(vid_bg_a), .vid_fg_a(vid_fg_a), .vid_spr_a(vid_spr_a),
@@ -188,7 +188,7 @@ module tecfri_core #(
 		.out_r(vid_r), .out_g(vid_g), .out_b(vid_b), .out_de(out_de), .out_x(out_x), .out_y(out_y));
 
 	// ------------------------------------------------------------ sound
-	tecfri_audio audio_sys (
+	sauro_audio audio_sys (
 		.clk(clk), .reset_n(machine_reset_n), .pause(sys_pause), .tricky(tricky), .speech_mute(speech_mute), .tone_en(tone_en), .dbg_sel(dbg_sel),
 		.rom_we(we_audio), .rom_wa(a[14:0]), .rom_wd(ioctl_data),
 		.snd_cmd_wr(snd_cmd_wr), .snd_cmd(snd_cmd),

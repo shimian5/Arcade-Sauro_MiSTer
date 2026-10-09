@@ -1,6 +1,6 @@
-"""ROM download layout for the Tecfri core (source of truth for images and MRA files).
+"""ROM download layout for the Sauro core (source of truth for images and MRA files).
 
-Offsets and sizes follow rtl/tecfri_core.sv. File names, sizes and CRCs are from MAME 0.257
+Offsets and sizes follow rtl/sauro_core.sv. File names, sizes and CRCs are from MAME 0.257
 sauro.cpp (docs/reference/mame). Split sets keep shared ROMs in the parent zip under the
 parent's file names, so each part names the zip that holds it.
 """

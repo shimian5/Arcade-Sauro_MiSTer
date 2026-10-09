@@ -1,7 +1,7 @@
 // Simple dual-port synchronous memory: one write port (ROM download), one read port.
-// One clk of read latency, matching what tecfri_video and tecfri_main assume.
+// One clk of read latency, matching what sauro_video and sauro_main assume.
 // Inferred as M10K block RAM; the Quartus fit report must confirm the mapping.
-module tecfri_rom #(
+module sauro_rom #(
 	parameter int AW = 16
 )(
 	input  logic          clk,

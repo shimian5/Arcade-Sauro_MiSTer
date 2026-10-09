@@ -1,4 +1,4 @@
-// tecfri_nvram unit test: cold-start default, save (upload) through hps_io-style priming reads, restore (download),
+// sauro_nvram unit test: cold-start default, save (upload) through hps_io-style priming reads, restore (download),
 // interrupted transfers, bounds checking, wrong index, CPU writes during a transfer, and autosave request timing.
 `timescale 1ns/1ps
 module tb_nvram;
@@ -8,7 +8,7 @@ module tb_nvram;
 	reg download = 0, upload = 0, wr = 0, rd = 0, arm = 1; reg [15:0] index = 0; reg [26:0] addr = 0; reg [7:0] data = 0;
 	wire [7:0] q; wire active, save_request;
 
-	tecfri_nvram #(.QUIET_CYCLES(2000), .MAX_CYCLES(20000)) dut (
+	sauro_nvram #(.QUIET_CYCLES(2000), .MAX_CYCLES(20000)) dut (
 		.clk(clk), .cpu_addr(cpu_addr), .cpu_data(cpu_data), .cpu_wr(cpu_wr), .cpu_q(cpu_q),
 		.download(download), .upload(upload), .wr(wr), .rd(rd), .arm(arm), .index(index), .addr(addr), .data(data),
 		.q(q), .active(active), .save_request(save_request));
@@ -131,7 +131,7 @@ module tb_nvram;
 		for (i = 0; i < 40; i = i + 1) begin cpu_write(11'h100 + i, i); repeat (900) @(posedge clk); end
 		check(save_request, "continuous writes still trigger a save");
 
-		if (errors == 0) $display("PASS: tecfri_nvram");
+		if (errors == 0) $display("PASS: sauro_nvram");
 		else $display("FAIL: %0d errors", errors);
 		$finish;
 	end

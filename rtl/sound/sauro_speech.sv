@@ -13,7 +13,7 @@
 //
 // LRQ: the chip asserts LRQ (active low) when it can take a new allophone; the board wires it to the audio
 // CPU's NMI. lrq_n is the inverse of Speech256's ldq. ALD writes are held until an enabled clock samples them.
-module tecfri_speech #(
+module sauro_speech #(
 	parameter [31:0] NCO_INC = 32'd176203787,     // round(4e6 * 256 / 312 / 80e6 * 2^32)
 	parameter int    BUSY_CYCLES = 240_000         // minimum LRQ-high time after a write: 3 ms at 80 MHz
 )(

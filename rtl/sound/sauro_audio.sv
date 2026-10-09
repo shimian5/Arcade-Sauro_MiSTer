@@ -10,7 +10,7 @@
 // instead (about 496 Hz with the programmed timer 2). The wiring is an inference, not a measurement.
 // Tricky Doc has no sound CPU: the main CPU writes the YM3812 at F820/F821, and the chip runs from 2.5 MHz
 // (20 MHz / 8) where the Sauro family uses 4 MHz.
-module tecfri_audio (
+module sauro_audio (
 	input  logic               clk,            // 80 MHz
 	input  logic               reset_n,        // machine reset (active low)
 	input  logic               pause,          // freezes CPU and sound chips, output muted
@@ -76,7 +76,7 @@ module tecfri_audio (
 
 	// program ROM and RAM
 	logic [7:0] rom_q;
-	tecfri_rom #(15) arom (.clk(clk), .we(rom_we), .wa(rom_wa), .wd(rom_wd), .ra(a[14:0]), .q(rom_q));
+	sauro_rom #(15) arom (.clk(clk), .we(rom_we), .wa(rom_wa), .wd(rom_wd), .ra(a[14:0]), .q(rom_q));
 
 	logic [7:0] ram [0:2047];
 	logic [7:0] ram_q;
@@ -148,7 +148,7 @@ module tecfri_audio (
 	assign dbg_ald_d  = cpu_do;
 	logic lrq_n;
 	logic signed [15:0] sp_sample;
-	tecfri_speech speech (
+	sauro_speech speech (
 		.clk(clk), .reset_n(reset_n && !tricky), .hold(pause),
 		.ald_wr(ald_wr), .ald_data(cpu_do), .lrq_n(lrq_n), .sample(sp_sample)
 	);

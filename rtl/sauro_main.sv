@@ -9,7 +9,7 @@
 //
 // Memory is single-clock synchronous; cpu_z80 samples read data across T3 so a
 // one-clock read latency needs no WAIT. ROM is an external synchronous port.
-module tecfri_main
+module sauro_main
 (
 	input  logic        clk,
 	input  logic        reset_n,
@@ -48,7 +48,7 @@ module tecfri_main
 	output logic [7:0]  ym_d,
 	output logic        wd_kick,
 
-	// Work RAM E000-E7FF lives in tecfri_nvram (battery RAM); registered one-clk read
+	// Work RAM E000-E7FF lives in sauro_nvram (battery RAM); registered one-clk read
 	output logic        wram_wr,
 	output logic [10:0] wram_a,
 	output logic [7:0]  wram_d,
