@@ -34,3 +34,14 @@ Close-up of the Sauro board supplied by the project owner (2026-10-08): LM324N q
 pot nearby), electrolytic capacitors, SIL resistor packs, a socketed 24-pin chip near the centre, two 8-position DIP banks,
 74LS540 buffers and the blue edge connector (hand-marked "8V"). No colour PROMs or video output stage in this crop, so
 no palette evidence. It may be useful later for the audio mix levels (YM3812 vs SP0256 gain into the LM324).
+
+## sauro-colour-prom-resistors.webp (saved)
+Close-up of the Sauro board supplied by the project owner (2026-10-08). Three stacked chips marked N82S129N K8701 on the left,
+and to their right three groups of four resistors (12 in total, same body style) in vertical stacks: the layout expected for
+three colour PROMs feeding a four-resistor ladder per channel. Also visible: an 8-resistor row at the top (probably pull-ups),
+74LS157/163/174/273/368 logic, PAL16R6A-2CN, and an EPROM labelled "3" at the bottom.
+The resistor colour bands are NOT legible at this resolution (checked by enlarging the groups), so no ladder values can be
+derived yet. Needed: a macro photo of one group (each resistor's bands readable, even light, camera square to the board) or
+unpowered in-circuit resistance readings of each resistor in a group. MAME's generic RGB_444_PROMS weights (14, 31, 67, 143)
+assume 2.2k / 1k / 470 / 220 ohm.
+Note: the chip marking (82S129, 256x4) differs from MAME's ROM names (82s137, 1Kx4); to be checked against the dumps.
