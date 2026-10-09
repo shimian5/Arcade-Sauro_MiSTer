@@ -28,3 +28,9 @@ positions about 10 and 9, the battery holder with an adhesive pad, 74ALS244-type
 resistor-and-diode pairs left of the upper EPROM. This crop does NOT show the colour PROMs (82S137 x3) or the resistor
 network feeding the video output, so it gives no palette evidence. Still wanted: the area around the three colour PROMs and
 the resistors / transistors between them and the JAMMA video pins (to read the real DAC weights and any output gain).
+
+## sauro-audio-dip-area.webp (saved)
+Close-up of the Sauro board supplied by the project owner (2026-10-08): LM324N quad op-amp (audio output stage, with a trim
+pot nearby), electrolytic capacitors, SIL resistor packs, a socketed 24-pin chip near the centre, two 8-position DIP banks,
+74LS540 buffers and the blue edge connector (hand-marked "8V"). No colour PROMs or video output stage in this crop, so
+no palette evidence. It may be useful later for the audio mix levels (YM3812 vs SP0256 gain into the LM324).
