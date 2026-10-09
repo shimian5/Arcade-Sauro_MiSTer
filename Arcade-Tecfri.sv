@@ -90,10 +90,10 @@ wire        forced_scandoubler;
 wire  [1:0] buttons;
 wire [127:0] status;
 
-// CRT position menu gating (hps_io status_menumask): bit 0 hides H-Position/V-Shift unless
-// CRT Adjust is On; bit 1 disables CRT Adjust while a scandoubler mode is active.
+// CRT position menu gating (hps_io status_menumask, concatenation is {bit 1, bit 0}): bit 0 hides H-Position/V-Shift (H0)
+// unless CRT Adjust is On; bit 1 disables CRT Adjust (D1) while a scandoubler mode is active.
 wire       crt_scandoubler = forced_scandoubler || (status[3:1] != 0);
-wire [15:0] status_menumask = {14'd0, (!status[101] || crt_scandoubler), crt_scandoubler};
+wire [15:0] status_menumask = {14'd0, crt_scandoubler, (!status[101] || crt_scandoubler)};
 wire [21:0] gamma_bus;
 wire [31:0] joystick_0, joystick_1;
 wire        ioctl_download, ioctl_wr, ioctl_upload, ioctl_rd;
