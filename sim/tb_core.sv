@@ -85,11 +85,15 @@ module tb_core;
 		$fwrite(log_f, "%0t COEF %0d\n", $time, $signed(core.audio_sys.speech.speech.coef_bus));
 	end
 
+	// +DSW1=<hex>: DIP bank 1 (default 66; 67 turns the Service switch on)
+	reg [7:0] dsw1_in = 8'h66;
+	initial if ($value$plusargs("DSW1=%h", dsw1_in)) ;
+
 	sauro_core core (
 		.clk(clk), .reset(reset), .pause(pause), .speech_mute(1'b0), .tone_en(1'b0), .dbg_sel(4'd0),
 		.ioctl_download(ioctl_download), .ioctl_upload(ioctl_upload), .ioctl_rd(ioctl_rd), .ioctl_wr(ioctl_wr), .ioctl_index(ioctl_index),
 		.ioctl_addr(ioctl_addr), .ioctl_data(ioctl_data),
-		.dsw1(8'h66), .dsw2(8'h2f), .p1(p1_in), .p2(p2_in),
+		.dsw1(dsw1_in), .dsw2(8'h2f), .p1(p1_in), .p2(p2_in),
 		.ce_pix(ce_pix), .vid_r(vid_r), .vid_g(vid_g), .vid_b(vid_b),
 		.hblank(hblank), .vblank(vblank), .hsync(hsync), .vsync(vsync),
 		.pix_x(pix_x), .pix_y(pix_y), .rom_ready(rom_ready), .audio(audio), .nv_data(nv_data), .nv_save_request(nv_save_request), .nv_transfer(nv_transfer),
