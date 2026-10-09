@@ -21,3 +21,10 @@ needs to place it here (e.g. `sauro-board.jpg`). Read from the inline image:
   a black enclosure/heat-sink over the audio amplifier, two DIP banks, battery position.
 - The second crystal is the main open item: its frequency and which circuit it clocks
   (speech, YM3812, or video) are unknown until the marking is read.
+
+## sauro-rom-battery-area.png (saved)
+Close-up of the Sauro board supplied by the project owner (2026-10-08): two EPROMs (one ST 27C256 type) at silkscreen
+positions about 10 and 9, the battery holder with an adhesive pad, 74ALS244-type buffers along the top, and two small
+resistor-and-diode pairs left of the upper EPROM. This crop does NOT show the colour PROMs (82S137 x3) or the resistor
+network feeding the video output, so it gives no palette evidence. Still wanted: the area around the three colour PROMs and
+the resistors / transistors between them and the JAMMA video pins (to read the real DAC weights and any output gain).
