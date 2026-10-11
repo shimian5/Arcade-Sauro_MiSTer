@@ -78,6 +78,7 @@ localparam CONF_STR = {
 	"H0O[85:80],CRT H-Position,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,+16,+17,+18,+19,+20,+21,+22,+23,+24,+25,+26,+27,+28,+29,+30,+31,-32,-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"H0O[78:74],CRT V-Shift,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"-;",
+	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
 	// Button names map to joystick bits 4 and up; keep in step with the MRA button defaults.
 	"J1,Button 1,Button 2,Start 1P,Start 2P,Coin,Pause;",
@@ -147,7 +148,8 @@ pll pll
 	.locked(pll_locked)
 );
 
-wire reset = RESET | status[0] | buttons[1] | !pll_locked;
+wire service_reset;
+wire reset = RESET | status[0] | buttons[1] | !pll_locked | service_reset;
 
 ///////////////////////   INPUTS / DIP   ///////////////////////////
 
@@ -159,6 +161,9 @@ initial begin
 end
 always @(posedge clk_sys)
 	if (ioctl_wr && ioctl_index == 16'd254 && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout;
+
+// The firmware reads the Service switch (DSW1 bit 0) only while starting, so changing it restarts the machine.
+sauro_service_reset service_restart (.clk(clk_sys), .service(sw[0][0]), .reset_request(service_reset));
 
 // MiSTer joystick bits: 0 right, 1 left, 2 down, 3 up, then the J1 buttons from bit 4:
 // 4 Button 1, 5 Button 2, 6 Start 1P, 7 Start 2P, 8 Coin, 9 Pause.
