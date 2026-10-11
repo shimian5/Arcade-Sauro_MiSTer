@@ -162,8 +162,16 @@ end
 always @(posedge clk_sys)
 	if (ioctl_wr && ioctl_index == 16'd254 && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout;
 
-// The firmware reads the Service switch (DSW1 bit 0) only while starting, so changing it restarts the machine.
-sauro_service_reset service_restart (.clk(clk_sys), .service(sw[0][0]), .reset_request(service_reset));
+// The firmware reads the Service switch (DSW1 bit 0) only while starting, so changing it restarts the machine:
+// any change of the switch holds the core in reset for 100 ms (same reset path as T[0]).
+reg        service_q = 1'b0;
+reg [22:0] service_hold = 23'd0;
+always @(posedge clk_sys) begin
+	service_q <= sw[0][0];
+	if (sw[0][0] != service_q) service_hold <= 23'd8000000;
+	else if (service_hold != 23'd0) service_hold <= service_hold - 1'd1;
+end
+assign service_reset = (service_hold != 23'd0);
 
 // MiSTer joystick bits: 0 right, 1 left, 2 down, 3 up, then the J1 buttons from bit 4:
 // 4 Button 1, 5 Button 2, 6 Start 1P, 7 Start 2P, 8 Coin, 9 Pause.
