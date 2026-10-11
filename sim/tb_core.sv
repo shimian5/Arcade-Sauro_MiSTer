@@ -85,6 +85,26 @@ module tb_core;
 		$fwrite(log_f, "%0t COEF %0d\n", $time, $signed(core.audio_sys.speech.speech.coef_bus));
 	end
 
+	// +SVC_AT=<ms>: at that machine time turn the Service switch (DSW1 bit 0) on and hold the core in reset for 100 ms, as the
+	// top level does when the switch changes (warm restart: battery RAM is kept).
+	integer svc_at_ms;
+	initial if ($value$plusargs("SVC_AT=%d", svc_at_ms)) begin
+		#(svc_at_ms * 64'd1000000000); dsw1_in[0] = 1'b1; reset = 1'b1; #(64'd100000000000); reset = 1'b0;
+	end
+
+	// With +SVC_AT: main CPU opcode-fetch address sampled every 50 ms from 20 ms before the restart (find where it runs or hangs)
+	reg [15:0] last_pc = 16'h0000;
+	always @(posedge clk) if (!core.main.m1_n && !core.main.mreq_n) last_pc <= core.main.a;
+	initial if ($test$plusargs("SVC_AT")) begin : pctrace
+		integer t0;
+		#1; t0 = svc_at_ms;
+		#((t0 > 20 ? t0 - 20 : 0) * 64'd1000000000);
+		forever begin
+			$display("PCTRACE t=%0t ps  pc=%04x  acks=%0d  machine_reset_n=%b  iff1=%b irq_pending=%b latch=%02x int_n=%b", $time, last_pc, acks, core.machine_reset_n, core.main.cpu.i_tv80_core.IntE_FF1, core.main.irq_pending, core.main.latch_q, core.main.int_n);
+			#(64'd50000000000);
+		end
+	end
+
 	// +DSW1=<hex>: DIP bank 1 (default 66; 67 turns the Service switch on)
 	reg [7:0] dsw1_in = 8'h66;
 	initial if ($value$plusargs("DSW1=%h", dsw1_in)) ;
