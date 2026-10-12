@@ -29,17 +29,17 @@
 		<part name="sp0256-al2.bin" crc="b504ac15" length="0x800" />
 	</rom>
 	<rom index="1"><part>00</part></rom>
-	<switches default="66,2F" base="1" page_id="1" page_name="Switches">
-		<dip bits="1" name="Service" ids="Off,On" />
-		<dip bits="2" name="Demo Sounds" ids="Off,On" />
-		<dip bits="3" name="Cabinet" ids="Cocktail,Upright" />
-		<dip bits="4" name="Free Play" ids="Off,On" />
-		<dip bits="5,6" name="Difficulty" ids="Very Hard,Hard,Easy,Very Easy" />
-		<dip bits="7" name="Allow Continue" ids="No,Yes" />
-		<dip bits="8" name="Freeze" ids="Off,On" />
-		<dip bits="9,10" name="Coin A" ids="4C/1C,3C/1C,2C/1C,1C/1C" />
-		<dip bits="11,12" name="Coin B" ids="1C/5C,1C/4C,1C/3C,1C/2C" />
-		<dip bits="13,14" name="Lives" ids="5,4,3,2" />
+	<switches default="66,2F">
+		<dip bits="0" name="Service" ids="Off,On" />
+		<dip bits="1" name="Demo Sounds" ids="Off,On" />
+		<dip bits="2" name="Cabinet" ids="Cocktail,Upright" />
+		<dip bits="3" name="Free Play" ids="Off,On" />
+		<dip bits="4,5" name="Difficulty" ids="Very Hard,Hard,Easy,Very Easy" />
+		<dip bits="6" name="Allow Continue" ids="No,Yes" />
+		<dip bits="7" name="Freeze" ids="Off,On" />
+		<dip bits="8,9" name="Coin A" ids="4C/1C,3C/1C,2C/1C,1C/1C" />
+		<dip bits="10,11" name="Coin B" ids="1C/5C,1C/4C,1C/3C,1C/2C" />
+		<dip bits="12,13" name="Lives" ids="5,4,3,2" />
 	</switches>
 	<buttons names="Button 1,Button 2,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L" />
 	<nvram index="4" size="2048" />

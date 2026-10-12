@@ -17,19 +17,21 @@ META = {
 	"trckydoc": dict(file="Tricky Doc.mra",          year=1987, category="Platform", zips="trckydoc.zip"),
 }
 
-# DIP switches from MAME's INPUT_PORTS tecfri (bit n of DSW1 = bit n, DSW2 = bit 8+n; values listed
-# in increasing numeric order). Default bytes 66 / 2F are MAME's defaults.
+# DIP switches from MAME's INPUT_PORTS tecfri. Main_MiSTer reads <dip bits="..."> as 0-based bit numbers of the 64-bit DIP word
+# (support/arcade/mra_loader.cpp; it ignores a "base" attribute): bit n of DSW1 = bit n, DSW2 = bit 8+n, and the first byte
+# of default="..." is DSW1. Values in `ids` are in increasing numeric order (index i = value i). Default bytes 66 / 2F are
+# MAME's defaults. (Before 2026-10-11 these were numbered from 1, so every entry toggled the bit above its own.)
 DIPS = [
-	('1',   "Service",        "Off,On"),
-	('2',   "Demo Sounds",    "Off,On"),
-	('3',   "Cabinet",        "Cocktail,Upright"),
-	('4',   "Free Play",      "Off,On"),
-	('5,6', "Difficulty",     "Very Hard,Hard,Easy,Very Easy"),
-	('7',   "Allow Continue", "No,Yes"),
-	('8',   "Freeze",         "Off,On"),
-	('9,10',  "Coin A",       "4C/1C,3C/1C,2C/1C,1C/1C"),
-	('11,12', "Coin B",       "1C/5C,1C/4C,1C/3C,1C/2C"),
-	('13,14', "Lives",        "5,4,3,2"),
+	('0',   "Service",        "Off,On"),
+	('1',   "Demo Sounds",    "Off,On"),
+	('2',   "Cabinet",        "Cocktail,Upright"),
+	('3',   "Free Play",      "Off,On"),
+	('4,5', "Difficulty",     "Very Hard,Hard,Easy,Very Easy"),
+	('6',   "Allow Continue", "No,Yes"),
+	('7',   "Freeze",         "Off,On"),
+	('8,9',   "Coin A",       "4C/1C,3C/1C,2C/1C,1C/1C"),
+	('10,11', "Coin B",       "1C/5C,1C/4C,1C/3C,1C/2C"),
+	('12,13', "Lives",        "5,4,3,2"),
 ]
 
 def parts_xml(name, image_size):
@@ -69,7 +71,7 @@ def main():
 {parts_xml(name, rl.IMAGE_SIZE)}
 	</rom>
 	<rom index="1"><part>{rl.SETS[name]['tricky']:02X}</part></rom>
-	<switches default="66,2F" base="1" page_id="1" page_name="Switches">
+	<switches default="66,2F">
 {dips}
 	</switches>
 	<buttons names="Button 1,Button 2,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L" />
