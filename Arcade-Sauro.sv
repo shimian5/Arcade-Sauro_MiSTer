@@ -69,8 +69,6 @@ localparam CONF_STR = {
 	"O[5],Dim video after 10s,On,Off;",
 	"-;",
 	"O[6],Speech (Sauro),On,Off;",
-	"O[7],Sound test tone,Off,On;",
-	"O[11:8],Debug tone,Off,ROM loaded,CPU running,YM written,YM IRQ,Cmd read,Cmd sent,YM audible,Main loop,INT vector,NMI vector,Wild fetch,YM timer2 start;",
 	"-;",
 	// CRT Adjust is analog/CRT only (core-side, Victory structure): it moves the sync on the
 	// VGA outputs, so the HDMI scaler follows it while On. Off = unchanged output.
@@ -198,8 +196,8 @@ sauro_core core
 	.reset(reset),
 	.pause(pause_cpu),
 	.speech_mute(status[6]),
-	.tone_en(status[7]),
-	.dbg_sel(status[11:8]),
+	.tone_en(1'b0),                 // diagnostic tone generator and event flags are not exposed in the menu
+	.dbg_sel(4'd0),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_upload(ioctl_upload),
