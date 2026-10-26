@@ -45,6 +45,14 @@ module sauro_nvram #(
 	wire saving    = upload   && index == 16'd4;
 	assign active  = restoring || saving;
 
+	// A transfer freezes the CPU, but it can start while a CPU write is already in flight: the write strobe then lands in the
+	// first clocks of the transfer and the CPU, once resumed, does not repeat it. Such a write is committed to RAM, and so is part of
+	// the saved image, until the host reads the first byte (the HPS needs microseconds to do that, the strobe lands within two
+	// clocks). From then on the image must stay a snapshot, so writes are ignored. A restore overwrites the RAM, so writes during it
+	// are always dropped.
+	logic        save_rd_seen = 1'b0;
+	wire         cpu_write_ok = !active || (saving && !rd && !save_rd_seen);
+
 	logic        restore_d = 1'b0, save_d = 1'b0;
 	logic [11:0] restore_count = 12'd0, save_count = 12'd0;
 	logic        restore_bad = 1'b0, save_bad = 1'b0;
@@ -60,10 +68,12 @@ module sauro_nvram #(
 		q     <= mem[addr[10:0]];
 		// bounds are checked before the write so a long stream cannot wrap onto the image
 		if (restoring && wr && addr < 27'd2048) mem[addr[10:0]] <= data;
-		else if (cpu_wr && !active)             mem[cpu_addr]   <= cpu_data;
+		else if (cpu_wr && cpu_write_ok)        mem[cpu_addr]   <= cpu_data;
 
 		restore_d <= restoring;
 		save_d    <= saving;
+		if (!saving)  save_rd_seen <= 1'b0;
+		else if (rd)  save_rd_seen <= 1'b1;
 		if (!restoring) begin
 			restore_count <= 12'd0;
 			restore_bad   <= 1'b0;

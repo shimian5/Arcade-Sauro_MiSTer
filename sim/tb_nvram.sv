@@ -51,6 +51,26 @@ module tb_nvram;
 	end
 	endtask
 
+	// Upload with CPU write strobes. `early` strobes a write in the same clock the transfer starts (the CPU was frozen in the
+	// middle of a write cycle). `late_at >= 0` strobes one after that many bytes were read (the CPU must be frozen by then).
+	task do_upload_cpu(input integer nbytes, input early, input [10:0] e_a, input [7:0] e_d,
+	                   input integer late_at, input [10:0] l_a, input [7:0] l_d);
+	begin
+		@(posedge clk); index <= 16'd4; upload <= 1'b1; addr <= 0;
+		if (early) begin cpu_addr <= e_a; cpu_data <= e_d; cpu_wr <= 1'b1; end
+		@(posedge clk); cpu_wr <= 1'b0; repeat (3) @(posedge clk);
+		rd <= 1'b1; @(posedge clk); rd <= 1'b0;
+		for (i = 0; i < nbytes; i = i + 1) begin
+			@(posedge clk); @(posedge clk);
+			saved[i] = q;
+			if (i == late_at) begin cpu_addr <= l_a; cpu_data <= l_d; cpu_wr <= 1'b1; @(posedge clk); cpu_wr <= 1'b0; end
+			addr <= i + 1; rd <= 1'b1;
+			@(posedge clk); rd <= 1'b0;
+		end
+		@(posedge clk); upload <= 1'b0; @(posedge clk); @(posedge clk);
+	end
+	endtask
+
 	task do_download(input [15:0] idx, input integer nbytes, input integer start, input [7:0] seed);
 	begin
 		@(posedge clk); index <= idx; download <= 1'b1;
@@ -130,6 +150,15 @@ module tb_nvram;
 		// 9. continuous writes still produce a request within MAX_CYCLES
 		for (i = 0; i < 40; i = i + 1) begin cpu_write(11'h100 + i, i); repeat (900) @(posedge clk); end
 		check(save_request, "continuous writes still trigger a save");
+
+		// 10. A write that straddles the start of a save (the CPU was frozen in the middle of it) is not lost; a write after the host
+		// has started reading is ignored, so the saved image stays a snapshot
+		cpu_write(11'h123, 8'h11); cpu_write(11'h200, 8'h22);
+		do_upload_cpu(2048, 1'b1, 11'h123, 8'hA7, 100, 11'h200, 8'h5C);
+		check(saved[11'h123] == 8'hA7, "write coincident with the start of a save is in the saved image");
+		cpu_rd(11'h123, r); check(r == 8'hA7, "write coincident with the start of a save is kept in RAM");
+		check(saved[11'h200] == 8'h22, "write after the host started reading is not in the saved image");
+		cpu_rd(11'h200, r); check(r == 8'h22, "write after the host started reading is dropped");
 
 		if (errors == 0) $display("PASS: sauro_nvram");
 		else $display("FAIL: %0d errors", errors);
