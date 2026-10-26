@@ -51,7 +51,7 @@ module sauro_core #(
 	output logic        vsync,
 	output logic [8:0]  pix_x,
 	output logic [8:0]  pix_y,
-	output logic        rom_ready,   // a complete ROM download has been received
+	output logic        rom_ready,   // the index-0 ROM download ended with exactly ROM_IMAGE_SIZE bytes, in address order (no content check)
 	output logic signed [15:0] audio,   // mono mix, signed; muted while paused
 	output logic [7:0]  nv_data,        // NVRAM upload data (ioctl_din)
 	output logic        nv_save_request,
@@ -81,12 +81,30 @@ module sauro_core #(
 	always_ff @(posedge clk)
 		if (ioctl_download && ioctl_index == 16'd1 && ioctl_wr) tricky <= ioctl_data[0];
 
-	// rom_ready rises when a complete index-0 download has finished.
-	logic dl_seen = 1'b0;
+	// rom_ready is a length-and-order check, not a content check. It rises when an index-0 download ends having delivered exactly
+	// ROM_IMAGE_SIZE bytes with ioctl_addr counting 0, 1, 2 ... in order; a short, long or out-of-order transfer leaves it low and
+	// the machine in reset. The chip CRCs and the image MD5 are checked by the MRA loader, not here; nothing in the core verifies the
+	// bytes themselves, so later changes must not treat rom_ready as an integrity guarantee.
+	// ROM_IMAGE_SIZE is the assembled image of tools/rom_layout.py (IMAGE_SIZE; last byte 593FF, the SP0256 ROM).
+	localparam [24:0] ROM_IMAGE_SIZE = 25'h59400;
+	logic [24:0] rom_bytes = 25'd0;
+	logic        rom_bad   = 1'b0;
+	logic        dl_rom_q  = 1'b0;
+	initial rom_ready = 1'b0;
+	wire        dl_start  = dl_rom && !dl_rom_q;
+	wire [24:0] rom_count = dl_start ? 25'd0 : rom_bytes;     // a write may arrive in the very clock the download starts
 	always_ff @(posedge clk) begin
-		if (dl_we) dl_seen <= 1'b1;
-		if (!ioctl_download && dl_seen) rom_ready <= 1'b1;
-		if (dl_rom) rom_ready <= 1'b0;
+		dl_rom_q <= dl_rom;
+		if (dl_start) begin
+			rom_ready <= 1'b0;
+			rom_bytes <= 25'd0;
+			rom_bad   <= 1'b0;
+		end
+		if (dl_we) begin
+			rom_bytes <= rom_count + 25'd1;
+			if (ioctl_addr != rom_count) rom_bad <= 1'b1;
+		end
+		if (dl_rom_q && !dl_rom) rom_ready <= !rom_bad && rom_bytes == ROM_IMAGE_SIZE;
 	end
 
 	wire machine_reset_n = !(reset || !rom_ready || ioctl_download);

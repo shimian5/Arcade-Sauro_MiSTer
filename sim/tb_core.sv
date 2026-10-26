@@ -105,6 +105,10 @@ module tb_core;
 		end
 	end
 
+	// +IMGLEN=<bytes>: send only this many ROM bytes (default the whole 0x59400-byte image) to check that rom_ready stays low
+	integer imglen = 365568;
+	initial if ($value$plusargs("IMGLEN=%d", imglen)) ;
+
 	// +DSW1=<hex>: DIP bank 1 (default 66; 67 turns the Service switch on)
 	reg [7:0] dsw1_in = 8'h66;
 	initial if ($value$plusargs("DSW1=%h", dsw1_in)) ;
@@ -304,7 +308,7 @@ module tb_core;
 		repeat (40) @(posedge clk);
 		ioctl_download <= 1'b1;
 		send(16'd1, 25'd0, {7'd0, tricky_arg});
-		for (i = 0; i <= 'h593FF; i = i + 1) send(16'd0, i, image[i]);
+		for (i = 0; i <= imglen - 1; i = i + 1) send(16'd0, i, image[i]);
 		if (nv_restore) for (i = 0; i < 2048; i = i + 1) send(16'd4, i, nvimg[i]);   // battery RAM restore, after the ROM
 		@(posedge clk); ioctl_download <= 1'b0;
 		repeat (20) @(posedge clk);
