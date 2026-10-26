@@ -10,10 +10,11 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import rom_layout as rl
 
-# Beta release names (no test prefix). The RBF is Arcade-Sauro_<date>.rbf; the <rbf> tag below is the core name Sauro.
+# MiSTer arcade layout: main games at the top of releases/, alternate sets of a game in releases/_alternatives/_<main game>/ (Sea Wolf is an
+# alternate set of Sauro). Beta release names (no test prefix). The RBF is Arcade-Sauro_<date>.rbf; the <rbf> tag below is the core name Sauro.
 META = {
 	"sauro":    dict(file="Sauro.mra",               year=1987, category="Shooter", zips="sauro.zip"),
-	"seawolft": dict(file="Sea Wolf (Tecfri).mra",   year=1987, category="Shooter", zips="seawolft.zip|sauro.zip"),
+	"seawolft": dict(file="_alternatives/_Sauro/Sea Wolf (Tecfri).mra", year=1987, category="Shooter", zips="seawolft.zip|sauro.zip"),
 	"trckydoc": dict(file="Tricky Doc.mra",          year=1987, category="Platform", zips="trckydoc.zip"),
 }
 
@@ -78,6 +79,7 @@ def main():
 	<nvram index="4" size="2048" />
 </misterromdescription>
 """
+		(out_dir / meta["file"]).parent.mkdir(parents=True, exist_ok=True)
 		(out_dir / meta["file"]).write_text(text, encoding="utf-8")
 		print(f"{meta['file']}: image md5 {md5}")
 
