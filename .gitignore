@@ -45,3 +45,7 @@ build.log
 build_console.log
 __pycache__/
 *.pyc
+
+# Local-only: diagnostic test builds (hashes are recorded in docs/BUILDS.md) and a board photo whose source is not recorded
+releases/dev/
+docs/reference/photos/tricky-doc-60922-1-board.webp

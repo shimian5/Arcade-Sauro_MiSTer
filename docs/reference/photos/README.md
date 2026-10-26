@@ -1,6 +1,6 @@
 # Board photos
 
-## tricky-doc-60922-1-board.webp (saved)
+## tricky-doc-60922-1-board.webp (kept locally, NOT in the repository: the original source was never recorded, so it is not republished here)
 Tecfri 60922/1, **Tricky Doc** (identified by the project owner). Supplied by the
 owner; original source not recorded. The owner also pointed to
 https://jammarcade.net/tricky-doc-repair-log/ (no raster information).

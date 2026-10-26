@@ -1,3 +1,5 @@
+> Note (2026-10-25): the diagnostic test RBFs listed below as releases/dev/... are not part of the published repository tree; they were removed from it (releases/dev/ is git-ignored). The hashes and source revisions recorded here still identify them. The public release files are in releases/.
+
 # Build and acceptance record
 
 Readiness claims name the exact artifact they apply to. Add a row for every bitstream that is tested.
