@@ -1,17 +1,124 @@
-# Arcade-Sauro: Tecfri Sauro-family arcade core for MiSTer (Sauro, Sea Wolf, Tricky Doc)
+# Arcade-Sauro
 
-Work in progress; **nothing here is playable or hardware-accepted yet.**
+Tecfri **Sauro-family** arcade hardware for [MiSTer FPGA](https://github.com/MiSTer-devel/Main_MiSTer): Sauro, Sea Wolf (Tecfri) and Tricky Doc.
 
-See [AGENTS.md](AGENTS.md) for project rules and [docs/SPEC_AND_PLAN.md](docs/SPEC_AND_PLAN.md)
-for the MAME-derived hardware spec and plan. Hardware evidence is limited to MAME 0.257
-(no schematics found), so all behavior is provisional.
+This is a **beta**. All three games boot from the unmodified MAME ROM sets and are playable. See [Status](#status) for exactly what has been confirmed on hardware and what has not.
 
-Imported components (pinned, licenses retained):
-- `rtl/tv80` (submodule, hutch31/tv80 @ 66a131c): Z80 core, used via `rtl/cpu_z80.v`
-  (adapted from the Victory core; build with `TV80_REFRESH` for external refresh).
-- `rtl/sound/imports/jtopl` (jotego/jtopl @ 7ac0c81, GPL-3.0): YM3812.
-- `rtl/sound/imports/Speech256` (trcwm/Speech256 @ 4c311cf, LGPL-3.0): SP0256.
-- `rtl/pause.sv`: JimmyStones Pause_MiSTer (GPL-3.0), as used in Victory.
+## Games
 
-Tests: `wsl -d archlinux -- make -C /mnt/c/MiSTerDev/Arcade-Sauro_MiSTer/sim test`
-Build: `tools/build.ps1` (full Quartus flow, unsandboxed PowerShell).
+| Game | MAME set | MRA | Notes |
+|---|---|---|---|
+| Sauro | `sauro` | `releases/Sauro.mra` | Two Z80s (5 MHz main, 4 MHz audio), YM3812, SP0256-AL2 speech |
+| Sea Wolf (Tecfri) | `seawolft` (clone of `sauro`) | `releases/_alternatives/_Sauro/Sea Wolf (Tecfri).mra` | Same board as Sauro; needs `sauro.zip` as well |
+| Tricky Doc | `trckydoc` | `releases/Tricky Doc.mra` | One Z80; the YM3812 is driven by the main CPU; no speech |
+
+## Installing
+
+Copy to the SD card:
+
+| File | Destination |
+|---|---|
+| `releases/Arcade-Sauro_<date>.rbf` | `_Arcade/cores/` |
+| `releases/Sauro.mra`, `releases/Tricky Doc.mra` | `_Arcade/` |
+| `releases/_alternatives/_Sauro/Sea Wolf (Tecfri).mra` | `_Arcade/_alternatives/_Sauro/` |
+| `sauro.zip`, `seawolft.zip`, `trckydoc.zip` | `games/mame/` |
+
+ROM sets are not included. They must be **MAME 0.257 (split)** sets. The MRAs verify every chip CRC and the assembled image MD5.
+
+Load a game from the **Arcade** menu. Settings saved for an older MRA with the same name (`config/dips/<MRA name>.dip`) override the MRA defaults. Delete that file if the DIP menu looks wrong after an update.
+
+## Controls
+
+Joystick, plus **Button 1**, **Button 2**, **Start 1P**, **Start 2P**, **Coin** and **Pause**. The MRA button names are mapped to the first six joystick buttons (default A, B, Start, Select, R, L).
+
+**Pause** freezes the CPUs and sound chips while the picture keeps running. It dims after about 10 seconds (switchable in the OSD). The game also pauses while the OSD is open unless you turn that off.
+
+## OSD options
+
+- **Aspect ratio**, **Scandoubler Fx**
+- **DIP** (the switches below)
+- **Pause when OSD is open**, **Dim video after 10s**
+- **Speech (Sauro)** On/Off
+- **CRT Adjust** Off/On, with **CRT H-Position** and **CRT V-Shift** while it is On
+- **Reset**, **Reset and close OSD**
+
+**CRT Adjust** moves the sync on the video output so the picture can be centred on an analog or Direct Video CRT. It is off by default and then changes nothing. It sits in the core, not in the framework, so while it is On the HDMI output follows the shift too.
+
+### DIP switches
+
+| Switch | Values | Default |
+|---|---|---|
+| Service | Off, On | Off |
+| Demo Sounds | Off, On | On |
+| Cabinet | Cocktail, Upright | Upright |
+| Free Play | Off, On | Off |
+| Difficulty | Very Hard, Hard, Easy, Very Easy | Easy |
+| Allow Continue | No, Yes | Yes |
+| Freeze | Off, On | Off |
+| Coin A | 4C/1C, 3C/1C, 2C/1C, 1C/1C | 1C/1C |
+| Coin B | 1C/5C, 1C/4C, 1C/3C, 1C/2C | 1C/2C |
+| Lives | 5, 4, 3, 2 | 3 |
+
+The defaults are MAME's. The game reads the switches only while starting up, so **changing Service resets the core** automatically. With Service **On** the game starts in its built-in test mode. After the start-up self-test (about two seconds) it shows a colour test; press **Start 1P** to step through the colour, DIP-switch and input screens. Set Service back to Off to return to the game. Freeze (when On) pauses the game with Start 1P and resumes with Start 2P.
+
+## Battery RAM (high scores)
+
+The 2 KB battery RAM is saved to `config/nvram/<MRA name>.nvm` and restored at start-up. The game keeps its stack in this RAM, so it is never quiet and the autosave fires about 30 seconds after the game starts, and again periodically. Save and restore are checked in simulation against MAME. See [docs/NVRAM.md](docs/NVRAM.md).
+
+## Status
+
+Confirmed on a real MiSTer by the author (HDMI, and an analog CRT through Direct Video):
+- All three games boot and run from the original ROMs. Video, sound and the Service test mode work.
+- The **Reset** menu entries and the Service-triggered reset.
+- **CRT Adjust**, H-Position and V-Shift.
+
+Verified in simulation only, not yet confirmed on hardware:
+- Battery RAM save and restore, checked against MAME for Sauro. Sea Wolf and Tricky Doc share the RAM map but were not run through the restore tests.
+- The Speech256 coefficient-load fix that removes a loud crack at the start of speech phrases.
+- Video: attract-mode and sampled gameplay frames match frames dumped from MAME pixel for pixel.
+
+## Known limitations
+
+- **Raster timing is inferred.** The core uses 316 x 284 total, 240 x 224 visible, a 5 MHz pixel enable and 55.714 Hz. MAME quotes 55.72 Hz as verified on a PCB, but no one has measured the blanking. Compared with typical 240p cores the picture is therefore smaller on screen; use your CRT's size controls. Details in [docs/PIXEL_TIMING.md](docs/PIXEL_TIMING.md).
+- **Speech is approximate.** The voice is generated by an allophone synthesiser (Speech256), not by the SP0256's own ROM microcode, so the sound and the allophone lengths are not those of the real chip. No recording of a real board exists to compare with. See [docs/AUDIO.md](docs/AUDIO.md).
+- **Palette is MAME's.** Colours come from the three colour PROMs through MAME's generic resistor weights. Some screens use very dark entries (about 12-18 % of full scale) that look nearly black on a CRT. The real board's resistor network has not been read, so this is unverified.
+- Cocktail screen flip is not implemented. The sprite-per-line limit has not been tested on very crowded frames. The 15 kHz scandoubler and VGA outputs have had little hardware testing.
+- The YM3812 interrupt source is inferred from the firmware (MAME fakes it with a 480 Hz timer).
+
+## Technical overview
+
+- System clock 80 MHz; the CPU and pixel clock are 1/16 enables (5 MHz), the audio CPU and YM3812 are 1/20 (4 MHz; 1/32, 2.5 MHz, on Tricky Doc). Output geometry never changes machine speed.
+- Hardware is modelled from MAME's drivers (`docs/reference/mame`); there are no schematics, so MAME-only facts are treated as provisional. Findings and open questions are in [docs/MAME_FINDINGS.md](docs/MAME_FINDINGS.md) and [docs/SPEC_AND_PLAN.md](docs/SPEC_AND_PLAN.md).
+- The ROMs are held in M10K blocks and loaded through the standard `hps_io` download. The framework (`sys/`) is unmodified.
+
+```
+Arcade-Sauro.sv        MiSTer top level (OSD, inputs, DIPs, video output)
+rtl/sauro_core.sv      machine: ROMs, battery RAM, main CPU, video, audio
+rtl/sauro_main.sv      main Z80 board (memory map, I/O, latch, interrupt)
+rtl/sauro_nvram.sv     battery RAM with MiSTer save/restore
+rtl/video/             tile/sprite video, raster timing, CRT position adjust
+rtl/sound/             audio board (Z80, YM3812, speech) and the vendored sound cores
+sim/  tools/  docs/    Verilator testbenches, MAME scripts and MRA generator, notes
+releases/              RBF and MRAs
+```
+
+## Building and testing
+
+- **Build:** full Quartus Prime Lite 17.0.2 flow, from an unsandboxed PowerShell: `tools/build.ps1` (it runs `quartus_sh --flow compile Arcade-Sauro`). The PLL instance must stay named `pll`. Clone with `--recurse-submodules` (the Z80 core is a submodule). Every build is recorded, with hash, source revision and timing, in [docs/BUILDS.md](docs/BUILDS.md).
+- **Tests:** Verilator in WSL2. `make -C sim test` runs the CPU smoke test. The other targets and scripts (`tools/wsl_*.sh`) cover video, the full core, battery RAM, speech and the Service switch. MAME is used as a comparison, not as the authority.
+- **MRAs:** `tools/make_mra.py <rom directory>` regenerates the MRAs from your ROM sets; no ROM data is stored here.
+
+## Credits and licences
+
+This core's own code is GPL-2.0-or-later (see `LICENSE` and the file headers). It uses:
+
+- MiSTer framework `sys/` and the template files: Sorgelig and the MiSTer-devel contributors (GPL-2.0-or-later), unmodified.
+- `rtl/tv80` (submodule, hutch31/tv80): Z80 core, used through `rtl/cpu_z80.v`.
+- `rtl/sound/imports/jtopl` (jotego/jtopl, Jose Tejada, GPL-3.0): YM3812.
+- `rtl/sound/imports/Speech256` (trcwm/Speech256, Niels Moseley, LGPL-3.0): speech synthesiser, with a clock-enable adaptation in `rtl/sound/speech256_ce` (see its `ADAPTATION.md`).
+- `rtl/pause.sv`: Pause_MiSTer, Jim Gregory (GPL-3.0).
+- `rtl/video/sauro_crt_position.sv`: adapted from the CRT position module of the Victory core, itself based on rmonic79's CRT Adjust (GPL-3.0-or-later).
+- `rtl/sound/imports/intv_ivoice`: the Intv_MiSTer SP0256 implementation, kept for evaluation only and **not** part of the build. See its `PROVENANCE.txt`.
+- [MAME](https://www.mamedev.org/) is the behavioural reference for the hardware.
+
+Sauro, Sea Wolf and Tricky Doc are the property of their rights holders (Tecfri). No game data is included.
