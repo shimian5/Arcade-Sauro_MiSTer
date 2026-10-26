@@ -130,3 +130,25 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - Change vs a652e139 (`b983fa5`): "Sound test tone" and "Debug tone" removed from CONF_STR; the diagnostic inputs of the core are tied to 0 (the tone generator and sticky event flags remain in sauro_audio.sv but are unreachable). "Speech (Sauro) On/Off" kept as a user option. ALMs 11,550 -> 11,512.
 - The previous same-day build (a652e139, source b983fa5) moved to releases/dev/Arcade-Sauro_20261011_a652e139.rbf so the two are not confused.
 - Owner report: Service mode works with the corrected MRAs (dfdce7c) on hardware (the grid / colour-bar test screen). The restart-on-change logic of this build is therefore exercised on hardware; the other items from the earlier entries (speech crack fix, CRT Adjust, NVRAM save, palette ladder) are still to be confirmed.
+
+## Source revision map
+
+This repository was published from a rewritten history (one `Initial Commit` with the framework template files, then the project commits; no AI-tool
+attribution, no diagnostic test binaries). Build records above cite the source revisions of the original working repository; their
+counterparts in this repository are:
+
+| Original revision | This repository |
+|---|---|
+| `0eba59a` | `1c5e762` |
+| `f16aa4c` | `37cfc66` |
+| `9452dfb` | `856146d` |
+| `f17e0f9` | `37c694a` |
+| `d7c67ae` | `addaced` |
+| `90b08bb` | `1b3c9f9` |
+| `9470ce1` | `166c05b` |
+| `370eacd` | `16a7371` |
+| `5ebe565` | `ef7f493` |
+| `29de8b6` | `71d1ec5` |
+| `b983fa5` | `c436b4d` |
+| `71403c7` | `1f8412d` |
+| `dfdce7c` | `abc64d4` |
