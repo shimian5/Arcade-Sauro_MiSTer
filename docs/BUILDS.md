@@ -131,6 +131,16 @@ Readiness claims name the exact artifact they apply to. Add a row for every bits
 - The previous same-day build (a652e139, source b983fa5) moved to releases/dev/Arcade-Sauro_20261011_a652e139.rbf so the two are not confused.
 - Owner report: Service mode works with the corrected MRAs (dfdce7c) on hardware (the grid / colour-bar test screen). The restart-on-change logic of this build is therefore exercised on hardware; the other items from the earlier entries (speech crack fix, CRT Adjust, NVRAM save, palette ladder) are still to be confirmed.
 
+## RBF 4b95fc5a4581d84edb18532f50837377 (releases/Arcade-Sauro_20261025.rbf, 3,616,324 bytes): NVRAM write fix, ROM-load length check, sys/ update
+- Source revision `6c541cd` (clean tree), Quartus 17.0.2 full flow (`quartus_sh --flow compile Arcade-Sauro`), fitter seed 2, 2026-10-25 19:45. 11,549 ALMs (28 %), 454 RAM blocks (82 %), 35 DSP. No negative slack in the STA summary (smallest listed slack +0.247 ns).
+- Changes vs 434d8554 (`71403c7`):
+  1. NVRAM (rtl/sauro_nvram.sv): a CPU write that lands in the first clocks of a save (the CPU is frozen mid-write by the transfer and never repeats it) was dropped; it is now committed to RAM and is part of the saved image until the host reads the first byte, after which writes are ignored so the image stays a snapshot. Found in review; reproduced by the new tb_nvram cases (failed on the old RTL, passes now).
+  2. ROM load (rtl/sauro_core.sv): `rom_ready` used to rise after any index-0 byte; it now requires exactly 0x59400 bytes with addresses in order. It is a length/order check only; chip CRCs and the image MD5 are checked by the MRA loader, not the core.
+  3. `sys/` brought forward to MiSTer-devel/Template_MiSTer 5dda373 (from 3ea1134): emu LFB_* input ports, analog audio pins from registers, yc_out sine registers, mcp23009 mode bit read twice. `sys/` is identical to the template; no top-level change was needed.
+- Tests rerun after these changes: tb_nvram (real passes; the bounds-check mutant fails as designed); full-core NVRAM scenarios (cold, restore valid, restore edited, save: same outcomes as before, 0 CPU bus writes during the transfer); truncated and over-long ROM images (365567, 365000, 100000, 365569 bytes) leave rom_ready low, the full image sets it. Not rerun: the MAME byte comparison of a saved image, frame comparison, gameplay replays.
+- Not tested on hardware: this build. Hardware-confirmed earlier (owner): Service test mode, Reset entries, CRT Adjust.
+- The previous release RBF (434d8554) is kept locally in releases/dev (not tracked).
+
 ## Source revision map
 
 This repository was published from a rewritten history (one `Initial Commit` with the framework template files, then the project commits; no AI-tool
@@ -152,3 +162,7 @@ counterparts in this repository are:
 | `b983fa5` | `c436b4d` |
 | `71403c7` | `1f8412d` |
 | `dfdce7c` | `abc64d4` |
+| `d36aff9` | `532e228` |
+| `19aa780` | `ee23ec0` |
+| `6c541cd` | `e652555` |
+| `285bf4e` | `8085e22` |
